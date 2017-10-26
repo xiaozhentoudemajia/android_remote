@@ -18,7 +18,7 @@ import com.google.gson.Gson;
 import aca.com.remote.R;
 import aca.com.remote.handler.UnceHandler;
 import aca.com.remote.permissions.Nammu;
-import com.wm.remusic.provider.PlaylistInfo;
+import aca.com.remote.provider.PlaylistInfo;
 import aca.com.remote.uitl.IConstants;
 import aca.com.remote.uitl.PreferencesUtility;
 import aca.com.remote.uitl.ThemeHelper;

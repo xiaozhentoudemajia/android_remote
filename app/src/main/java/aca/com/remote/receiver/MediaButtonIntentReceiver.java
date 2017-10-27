@@ -22,7 +22,7 @@ import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 import android.view.KeyEvent;
 
-import aca.com.remote.MainActivity;
+import aca.com.remote.activity.MainActivity;
 import aca.com.remote.service.MediaService;
 
 

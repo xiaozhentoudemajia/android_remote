@@ -20,7 +20,7 @@
     android:layout_width="wrap_content"
     android:layout_height="match_parent">
 
-    <com.bilibili.magicasakura.widgets.TintProgressBar
+    <aca.com.magicasakura.widgets.TintProgressBar
         android:id="@+id/progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"

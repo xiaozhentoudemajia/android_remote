@@ -9,7 +9,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import aca.com.remote.MainApplication;
-import aca.com.remote.MainActivity;
+import aca.com.remote.activity.MainActivity;
 import aca.com.remote.provider.MusicPlaybackState;
 import aca.com.remote.uitl.CommonUtils;
 import aca.com.remote.uitl.PreferencesUtility;

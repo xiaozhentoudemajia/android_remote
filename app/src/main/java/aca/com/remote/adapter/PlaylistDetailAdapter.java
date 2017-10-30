@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import aca.com.remote.R;
-import com.wm.remusic.activity.PlaylistSelectActivity;
+import aca.com.remote.activity.PlaylistSelectActivity;
 import aca.com.remote.fragment.MoreFragment;
 import aca.com.remote.info.MusicInfo;
 import aca.com.remote.service.MusicPlayer;

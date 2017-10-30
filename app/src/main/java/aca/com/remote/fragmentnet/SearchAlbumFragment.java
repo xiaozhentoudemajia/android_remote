@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import aca.com.remote.R;
-import com.wm.remusic.activity.AlbumsDetailActivity;
+import aca.com.remote.activity.AlbumsDetailActivity;
 import aca.com.remote.fragment.AttachFragment;
 import aca.com.remote.json.SearchAlbumInfo;
 import aca.com.remote.widget.DividerItemDecoration;

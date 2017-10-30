@@ -28,7 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import aca.com.remote.R;
-import com.wm.remusic.activity.PlaylistActivity;
+import aca.com.remote.activity.PlaylistActivity;
 import aca.com.remote.fragment.AttachFragment;
 import aca.com.remote.json.GedanInfo;
 import aca.com.remote.net.BMA;

@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import aca.com.magicasakura.widgets.TintImageView;
 import aca.com.remote.R;
-import com.wm.remusic.activity.SelectActivity;
+import aca.com.remote.activity.SelectActivity;
 import aca.com.remote.handler.HandlerUtil;
 import aca.com.remote.info.MusicInfo;
 import aca.com.remote.service.MusicPlayer;

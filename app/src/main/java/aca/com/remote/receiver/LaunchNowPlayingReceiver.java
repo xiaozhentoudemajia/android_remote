@@ -20,7 +20,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 
-import com.wm.remusic.activity.PlayingActivity;
+import aca.com.remote.activity.PlayingActivity;
 
 public class LaunchNowPlayingReceiver extends BroadcastReceiver {
 

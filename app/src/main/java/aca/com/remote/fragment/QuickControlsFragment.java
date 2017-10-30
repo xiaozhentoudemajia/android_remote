@@ -28,7 +28,7 @@ import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import aca.com.remote.MainApplication;
 import aca.com.remote.R;
-import com.wm.remusic.activity.PlayingActivity;
+import aca.com.remote.activity.PlayingActivity;
 import aca.com.remote.handler.HandlerUtil;
 import aca.com.remote.service.MusicPlayer;
 

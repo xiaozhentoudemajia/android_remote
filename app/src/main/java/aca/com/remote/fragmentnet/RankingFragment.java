@@ -17,7 +17,7 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import aca.com.remote.R;
-import com.wm.remusic.activity.RankPlaylistActivity;
+//import com.wm.remusic.activity.RankPlaylistActivity;
 import aca.com.remote.fragment.AttachFragment;
 import aca.com.remote.json.BillboardInfo;
 import aca.com.remote.net.BMA;
@@ -206,10 +206,11 @@ public class RankingFragment extends AttachFragment {
                     @Override
                     public void onClick(View v) {
                         if(getAdapterPosition() > -1){
+                            /* wwj
                             Intent intent = new Intent(mContext, RankPlaylistActivity.class);
                             intent.putExtra("type",mBillList[getAdapterPosition()]);
                             intent.putExtra("pic",pic[getAdapterPosition()]);
-                            mContext.startActivity(intent);
+                            mContext.startActivity(intent);*/
                         }
                     }
                 });

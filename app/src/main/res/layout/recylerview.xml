@@ -15,7 +15,7 @@
         android:layout_gravity="center"
         android:layout_width="100dp"
         android:layout_height="100dp" />
-    <com.wm.remusic.widget.SideBar
+    <aca.com.remote.widget.SideBar
         android:visibility="invisible"
         android:id="@+id/sidebar"
         android:layout_width="20dp"

@@ -24,7 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import aca.com.remote.R;
-import com.wm.remusic.fragmentnet.SearchWords;
+import aca.com.remote.fragmentnet.SearchWords;
 import aca.com.remote.provider.SearchHistory;
 
 import java.util.ArrayList;
@@ -98,7 +98,6 @@ public class RecentSearchAdapter extends RecyclerView.Adapter<RecentSearchAdapte
             if (searchWords != null) {
                 searchWords.onSearch(recentSearches.get(getAdapterPosition()));
             }
-
         }
 
     }

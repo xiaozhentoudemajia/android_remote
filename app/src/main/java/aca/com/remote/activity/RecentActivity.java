@@ -69,7 +69,7 @@ public class RecentActivity extends BaseActivity {
         final ActionBar ab = getSupportActionBar();
         ab.setHomeAsUpIndicator(R.drawable.actionbar_back);
         ab.setDisplayHomeAsUpEnabled(true);
-        ab.setTitle("最近播放");
+            ab.setTitle("Recently Played");
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

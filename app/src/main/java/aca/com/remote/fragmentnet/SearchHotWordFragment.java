@@ -98,7 +98,7 @@ public class SearchHotWordFragment extends AttachFragment implements View.OnClic
                 recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
                 recyclerView.setHasFixedSize(true);
                 adapter = new RecentSearchAdapter(mContext);
-                adapter.setListenter(SearchHotWordFragment.this);
+                // wwj adapter.setListenter(SearchHotWordFragment.this);
                 recyclerView.setAdapter(adapter);
 
                 TextView text1 = (TextView) view.findViewById(R.id.text1);

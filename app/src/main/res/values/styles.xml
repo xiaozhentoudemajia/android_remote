@@ -193,4 +193,11 @@
         <item name="android:maxWidth">1080px</item>
     </style>
 
+    <style name="NotificationText" parent="android:TextAppearance.StatusBar.EventContent"/>
+    <style name="NotificationTitle" parent="android:TextAppearance.StatusBar.EventContent.Title"/>
+
+    <color name="highlight">#FF33B5E5</color>
+    <color name="highlight_60">#9933B5E5</color>
+    <color name="highlight_40">#6633B5E5</color>
+
 </resources>

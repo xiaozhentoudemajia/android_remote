@@ -1,15 +1,23 @@
 package aca.com.remote.fragment;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Animatable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +39,8 @@ import aca.com.remote.R;
 import aca.com.remote.activity.PlayingActivity;
 import aca.com.remote.handler.HandlerUtil;
 import aca.com.remote.service.MusicPlayer;
+import aca.com.remote.tunes.daap.Session;
+import aca.com.remote.tunes.daap.Status;
 
 public class QuickControlsFragment extends BaseFragment {
 
@@ -63,6 +73,9 @@ public class QuickControlsFragment extends BaseFragment {
     private ImageView playQueue, next;
     private String TAG = "QuickControlsFragment";
     private static QuickControlsFragment fragment;
+    private Session mSession;
+    private static Status status;
+    protected boolean dragging = false;
 
     public static QuickControlsFragment newInstance() {
         return new QuickControlsFragment();
@@ -83,10 +96,30 @@ public class QuickControlsFragment extends BaseFragment {
 
         mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary));
         mProgress.postDelayed(mUpdateProgress,0);
+        this.mProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromTouch) {
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                dragging = true;
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                dragging = false;
+                if (mSession == null || seekBar == null || status == null) {
+                    return;
+                }
+
+                // scan to location in song
+                mSession.controlProgress(seekBar.getProgress());
+            }
+        });
 
         mPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                /*wwj
 
                 mPlayPause.setImageResource(MusicPlayer.isPlaying() ? R.drawable.playbar_btn_pause
                         : R.drawable.playbar_btn_play);
@@ -103,7 +136,31 @@ public class QuickControlsFragment extends BaseFragment {
                         }
                     }, 60);
                 }
+                 */
 
+                if (mSession != null) {
+                    if (status.getPlayStatus() == Status.STATE_PLAYING) {
+                        mSession.controlPause();
+                    } else {
+                        mSession.controlPlay();
+                    }
+                } else {
+                    mPlayPause.setImageResource(MusicPlayer.isPlaying() ? R.drawable.playbar_btn_pause
+                            : R.drawable.playbar_btn_play);
+                    mPlayPause.setImageTintList(R.color.theme_color_primary);
+
+                    if (MusicPlayer.getQueueSize() == 0) {
+                        Toast.makeText(MainApplication.context, getResources().getString(R.string.queue_is_empty),
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        HandlerUtil.getInstance(MainApplication.context).postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                MusicPlayer.playOrPause();
+                            }
+                        }, 60);
+                    }
+                }
             }
         });
 
@@ -141,7 +198,7 @@ public class QuickControlsFragment extends BaseFragment {
             public void onClick(View v) {
                 Intent intent = new Intent(MainApplication.context, PlayingActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                MainApplication.context.startActivity(intent);
+                //wwj MainApplication.context.startActivity(intent);
             }
         });
 
@@ -218,11 +275,21 @@ public class QuickControlsFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
+        /*wwj
         mProgress.setMax(1000);
         mProgress.removeCallbacks(mUpdateProgress);
         mProgress.postDelayed(mUpdateProgress,0);
         updateNowplayingCard();
-
+        */
+        if (mSession == null) {
+            mProgress.setMax(1000);
+            mProgress.removeCallbacks(mUpdateProgress);
+            mProgress.postDelayed(mUpdateProgress, 0);
+            updateNowplayingCard();
+        } else {
+            Log.i("wwj", "onResume:"+mContext.toString());
+            statusUpdate.sendEmptyMessage(Status.UPDATE_TRACK);
+        }
     }
 
 
@@ -257,5 +324,72 @@ public class QuickControlsFragment extends BaseFragment {
         mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary));
     }
 
+    public void updateTrackInfo(Session session) {
+        mSession = session;
+        if (mSession != null) {
+            status = session.singletonStatus(statusUpdate);
+            status.updateHandler(statusUpdate);
+            statusUpdate.sendEmptyMessage(Status.UPDATE_TRACK);
+        } else {
+            status.updateHandler(null);
+            status = null;
+        }
+    }
 
+    protected Handler statusUpdate = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            // update gui based on severity
+            switch (msg.what) {
+                case Status.UPDATE_TRACK:
+                    Log.i("wwj", "UPDATE_TRACK");
+                    mTitle.setText(status.getTrackName());
+                    mArtist.setText(status.getTrackArtist());
+
+                case Status.UPDATE_COVER:
+                    Log.i("wwj", "UPDATE_COVER");
+                    if (status.coverEmpty) {
+                        // fade down if no coverart
+                        mAlbumArt.setImageDrawable(new ColorDrawable(Color.BLACK));
+                    } else if (status.coverCache != null) {
+                        // fade over to new coverart
+                        Drawable one = mAlbumArt.getDrawable();
+                        if (one != null) {
+                            TransitionDrawable trans = new TransitionDrawable(new Drawable[] { one,
+                                    new BitmapDrawable(getResources(), status.coverCache) });
+                            mAlbumArt.setImageDrawable(trans);
+                            trans.startTransition(1000);
+                        } else {
+                            mAlbumArt.setImageDrawable(new BitmapDrawable(getResources(), status.coverCache));
+                        }
+                        one = null;
+                    }
+
+                case Status.UPDATE_STATE:
+                    Log.i("wwj", "UPDATE_STATE");
+                    mPlayPause.setImageResource((status.getPlayStatus() == Status.STATE_PLAYING) ? R.drawable.playbar_btn_pause
+                            : R.drawable.playbar_btn_play);
+                    mPlayPause.setImageTintList(R.color.theme_color_primary);
+                    mProgress.setMax(status.getProgressTotal());
+
+                case Status.UPDATE_PROGRESS:
+                    Log.i("wwj", "UPDATE_PROGRESS: "+status.getProgress());
+                    if (!dragging) {
+                        mProgress.setProgress(status.getProgress());
+                    }
+                    break;
+
+                // This one is triggered by a thread, so should not be used to
+                // update progress, etc...
+                case Status.UPDATE_RATING:
+                    Log.i("wwj", "UPDATE_RATING");
+                    break;
+
+                case Status.UPDATE_SPEAKERS:
+                    Log.i("wwj", "UPDATE_SPEAKERS");
+                    break;
+            }
+        }
+    };
 }

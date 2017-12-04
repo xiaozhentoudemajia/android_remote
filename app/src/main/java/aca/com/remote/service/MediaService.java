@@ -78,7 +78,7 @@ import com.google.gson.reflect.TypeToken;
 import aca.com.remote.MainApplication;
 import aca.com.remote.MediaAidlInterface;
 import aca.com.remote.R;
-import com.wm.remusic.activity.LockActivity;
+//import com.wm.remusic.activity.LockActivity;
 import aca.com.remote.downmusic.Down;
 import aca.com.remote.info.MusicInfo;
 import aca.com.remote.json.MusicFileDownInfo;
@@ -586,9 +586,10 @@ public class MediaService extends Service {
         } else if (Intent.ACTION_SCREEN_OFF.equals(action) ){
 
             if(isPlaying() && !mIsLocked){
+                /* wwj
                 Intent lockscreen = new Intent(this, LockActivity.class);
                 lockscreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(lockscreen);
+                startActivity(lockscreen);*/
             }
         } else if (LOCK_SCREEN.equals(action)){
             mIsLocked = intent.getBooleanExtra("islock",true);

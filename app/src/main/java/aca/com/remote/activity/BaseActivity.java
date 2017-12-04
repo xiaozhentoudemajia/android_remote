@@ -18,6 +18,7 @@ import aca.com.remote.R;
 import aca.com.remote.fragment.QuickControlsFragment;
 import aca.com.remote.service.MediaService;
 import aca.com.remote.service.MusicPlayer;
+import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.uitl.IConstants;
 
 import java.lang.ref.WeakReference;
@@ -146,6 +147,11 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
             if (fragment != null)
                 ft.hide(fragment).commitAllowingStateLoss();
         }
+    }
+
+    public void updateTrackInfo(Session session) {
+        if (fragment != null)
+            fragment.updateTrackInfo(session);
     }
 
     @Override

@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 import aca.com.remote.activity.BaseActivity;
+import aca.com.remote.activity.MainActivity;
+import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.activity.MusicStateListener;
 
 /**
@@ -66,5 +68,24 @@ public class BaseFragment extends Fragment implements MusicStateListener {
 
     }
 
+    void setCurHost(String host) {
+        ((MainActivity)mContext).setCurHost(host);
+    }
 
+
+    void setCurHostLibrary(String library) {
+        ((MainActivity)mContext).setCurHostLibrary(library);
+    }
+
+    void setSession(Session session) {
+        ((MainActivity)mContext).setSession(session);
+    }
+
+    void setMusicService(String service) {
+        ((MainActivity)mContext).setMusicService(service);
+    }
+
+    void updateTrackInfo(Session session) {
+        ((MainActivity)mContext).updateTrackInfo(session);
+    }
 }

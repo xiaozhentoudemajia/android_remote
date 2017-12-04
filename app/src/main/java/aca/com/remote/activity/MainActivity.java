@@ -28,10 +28,12 @@ import aca.com.remote.adapter.MenuItemAdapter;
 import aca.com.remote.dialog.CardPickerDialog;
 import aca.com.remote.fragment.BitSetFragment;
 import aca.com.remote.fragment.MainFragment;
+import aca.com.remote.fragment.LibraryFragment;
 import aca.com.remote.fragment.TimingFragment;
-import aca.com.remote.fragmentnet.TabNetPagerFragment;
+import aca.com.remote.fragment.TabLibraryPagerFragment;
 import aca.com.remote.handler.HandlerUtil;
 import aca.com.remote.service.MusicPlayer;
+import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.uitl.ThemeHelper;
 import aca.com.remote.widget.CustomViewPager;
 import aca.com.remote.widget.SplashScreen;
@@ -47,6 +49,10 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
     private ListView mLvLeftMenu;
     private long time = 0;
     private SplashScreen splashScreen;
+    private static Session mSession;
+    private static String mMusicService;
+    private static String mCurHost;
+    private static String mCurHostLibary;
 
     public void onCreate(Bundle savedInstanceState) {
         splashScreen = new SplashScreen(this);
@@ -66,7 +72,7 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
 
         setToolBar();
         setViewPager();
-        setUpDrawer();
+        //wwj setUpDrawer();
         HandlerUtil.getInstance(this).postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -89,15 +95,22 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
     private void setViewPager() {
         tabs.add(barnet);
         tabs.add(barmusic);
+        tabs.add(barfriends);
         final CustomViewPager customViewPager = (CustomViewPager) findViewById(R.id.main_viewpager);
         final MainFragment mainFragment = new MainFragment();
-        final TabNetPagerFragment tabNetPagerFragment = new TabNetPagerFragment();
+        final LibraryFragment libraryFragment = new LibraryFragment();
+        final TabLibraryPagerFragment tabLibraryPagerFragment = new TabLibraryPagerFragment();
         CustomViewPagerAdapter customViewPagerAdapter = new CustomViewPagerAdapter(getSupportFragmentManager());
-        customViewPagerAdapter.addFragment(tabNetPagerFragment);
+        customViewPagerAdapter.addFragment(tabLibraryPagerFragment);
         customViewPagerAdapter.addFragment(mainFragment);
+        customViewPagerAdapter.addFragment(libraryFragment);
         customViewPager.setAdapter(customViewPagerAdapter);
-        customViewPager.setCurrentItem(1);
-        barmusic.setSelected(true);
+        customViewPager.setCurrentItem(2);
+
+        // ViewPager缓存2个页面，防止fragment被销毁重载
+        customViewPager.setOffscreenPageLimit(2);
+
+        barfriends.setSelected(true);
         customViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -127,13 +140,20 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
                 customViewPager.setCurrentItem(1);
             }
         });
+        barfriends.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                customViewPager.setCurrentItem(2);
+            }
+        });
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /* wwj
                 final Intent intent = new Intent(MainActivity.this, NetSearchWordsActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                MainActivity.this.startActivity(intent);
+                MainActivity.this.startActivity(intent);*/
             }
         });
     }
@@ -301,5 +321,37 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
 //        moveTaskToBack(true);
         // System.exit(0);
         // finish();
+    }
+
+    public void setCurHost(String host) {
+        mCurHost = host;
+    }
+
+    public String getCurHost() {
+        return mCurHost;
+    }
+
+    public void setCurHostLibrary(String library) {
+        mCurHostLibary = library;
+    }
+
+    public String getCurHostLibrary() {
+        return mCurHostLibary;
+    }
+
+    public void setSession(Session session) {
+        mSession = session;
+    }
+
+    public Session getSession() {
+        return mSession;
+    }
+
+    public void setMusicService(String Service) {
+        mMusicService = Service;
+    }
+
+    public String getMusicService() {
+        return mMusicService;
     }
 }

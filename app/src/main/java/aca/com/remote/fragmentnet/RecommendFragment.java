@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,18 +31,23 @@ import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import aca.com.magicasakura.widgets.TintButton;
 import aca.com.remote.MainApplication;
 import aca.com.remote.R;
 import aca.com.remote.activity.AlbumsDetailActivity;
-import com.wm.remusic.activity.NetItemChangeActivity;
+//import com.wm.remusic.activity.NetItemChangeActivity;
+import aca.com.remote.activity.MainActivity;
 import aca.com.remote.activity.PlaylistActivity;
-import com.wm.remusic.activity.RadioDetailActivity;
+//import com.wm.remusic.activity.RadioDetailActivity;
+import aca.com.remote.activity.ShoutcastActivity;
 import aca.com.remote.fragment.AttachFragment;
 import aca.com.remote.json.RecommendListNewAlbumInfo;
 import aca.com.remote.json.RecommendListRadioInfo;
 import aca.com.remote.json.RecommendListRecommendInfo;
 import aca.com.remote.net.HttpUtil;
 import aca.com.remote.net.NetworkUtils;
+import aca.com.remote.tunes.util.Constants;
 import aca.com.remote.uitl.PreferencesUtility;
 import aca.com.remote.widget.LoodView;
 
@@ -118,12 +124,25 @@ public class RecommendFragment extends AttachFragment {
         change.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /* wwj
                 Intent itent = new Intent(mContext, NetItemChangeActivity.class);
-                mContext.startActivity(itent);
+                mContext.startActivity(itent);*/
             }
         });
 
         mLoodView = (LoodView) mRecommendView.findViewById(R.id.loop_view);
+
+        TintButton btn = mRecommendView.findViewById(R.id.private_fm);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(mContext, ShoutcastActivity.class);
+                intent.putExtra(Constants.EXTRA_ADDRESS, getCurHost());
+                intent.putExtra(Constants.EXTRA_LIBRARY, getCurHostLibary());
+                mContext.startActivity(intent);
+            }
+        });
+
         if(!isDayFirst){
             mContent.addView(mRecommendView);
         }
@@ -517,13 +536,13 @@ public class RecommendFragment extends AttachFragment {
             ((ItemView) holder).itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+/* wwj
                     Intent intent = new Intent(mContext, RadioDetailActivity.class);
                     intent.putExtra("albumid", info.getAlbum_id());
                     intent.putExtra("albumart", info.getPic());
                     intent.putExtra("albumname", info.getTitle());
                     intent.putExtra("artistname", info.getDesc());
-                    mContext.startActivity(intent);
+                    mContext.startActivity(intent);*/
 
                 }
             });

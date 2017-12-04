@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 
 import aca.com.magicasakura.utils.TintManager;
 
@@ -27,7 +28,7 @@ import aca.com.magicasakura.utils.TintManager;
  * @author xyczero617@gmail.com
  * @time 16/2/4
  */
-public class TintProgressBar extends ProgressBar implements Tintable {
+public class TintProgressBar extends SeekBar implements Tintable {
     private AppCompatProgressBarHelper mProgressBarHelper;
 
     public TintProgressBar(Context context) {

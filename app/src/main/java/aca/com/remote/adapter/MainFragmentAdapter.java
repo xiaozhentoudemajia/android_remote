@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,9 +24,9 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import aca.com.remote.R;
 import aca.com.remote.activity.DownActivity;
 import aca.com.remote.activity.PlaylistActivity;
-import com.wm.remusic.activity.PlaylistManagerActivity;
-import com.wm.remusic.activity.RecentActivity;
-import com.wm.remusic.activity.TabActivity;
+import aca.com.remote.activity.PlaylistManagerActivity;
+import aca.com.remote.activity.RecentActivity;
+import aca.com.remote.activity.TabActivity;
 import aca.com.remote.info.Playlist;
 import aca.com.remote.provider.PlaylistInfo;
 import aca.com.remote.provider.PlaylistsManager;
@@ -208,7 +209,6 @@ public class MainFragmentAdapter extends RecyclerView.Adapter<MainFragmentAdapte
                 itemHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
                         Intent intent = new Intent(mContext, TabActivity.class);
                         intent.putExtra("page_number", 1);
                         mContext.startActivity(intent);

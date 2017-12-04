@@ -19,7 +19,7 @@ import android.widget.ImageView;
 
 import aca.com.magicasakura.utils.ThemeUtils;
 import aca.com.remote.R;
-import com.wm.remusic.activity.LocalSearchActivity;
+import aca.com.remote.activity.LocalSearchActivity;
 import aca.com.remote.uitl.CommonUtils;
 
 import java.util.ArrayList;

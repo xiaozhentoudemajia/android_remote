@@ -55,6 +55,7 @@ public class LibraryFragment extends BaseFragment {
     protected ListView list;
     protected SpeakersAdapter adapter;
     private View headerView;
+    private int requestCode = 0;
 
     protected long cachedVolume = -1;
     protected long cachedTime = -1;
@@ -127,7 +128,7 @@ public class LibraryFragment extends BaseFragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(mContext, SearchLibraryActivity.class);
-                mContext.startActivityForResult(intent, 0);
+                startActivityForResult(intent, requestCode);
             }
         });
 
@@ -137,7 +138,7 @@ public class LibraryFragment extends BaseFragment {
             public void onClick(View view) {
                 Intent intent = new Intent(mContext, SmartLinkActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                mContext.startActivity(intent);
+                startActivity(intent);
             }
         });
 
@@ -155,29 +156,55 @@ public class LibraryFragment extends BaseFragment {
         return view;
     }
 
+    private void clearList() {
+        int size = SPEAKERS.size();
+
+        if (size > 0) {
+            SPEAKERS.removeAll(SPEAKERS);
+            statusUpdate.sendEmptyMessage(NOTIFY_SPEAKERS);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(TAG, "onActivityResult:"+resultCode);
+        switch(requestCode) {
+            case SearchLibraryActivity.CHANGE_LIBRARY:
+                break;
+            case SearchLibraryActivity.ORIGIN_LIBRARY:
+                break;
+            default:
+                break;
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         if (backendService != null) {
-            Log.i("wwj", "current host: " + backendService.getCurHost());
-            Log.i("wwj", "current library: " + backendService.getCurHostLibrary());
-            Log.i("wwj", "current service: " + backendService.getCurHostServices());
+            Log.i(TAG, "current host: " + backendService.getCurHost());
+            Log.i(TAG, "current library: " + backendService.getCurHostLibrary());
+            Log.i(TAG, "current service: " + backendService.getCurHostServices());
 
-            if (backendService.getCurHost() != null
-                    && backendService.getCurHostLibrary() != null) {
-                curHost = backendService.getCurHost();
-                setCurHost(curHost);
-                curHostLibrary = backendService.getCurHostLibrary();
-                setCurHostLibrary(curHostLibrary);
+            if (backendService.checkInternal() == true) {
+                if (backendService.getCurHost() != null
+                        && backendService.getCurHostLibrary() != null) {
+                    curHost = backendService.getCurHost();
+                    setCurHost(curHost);
+                    curHostLibrary = backendService.getCurHostLibrary();
+                    setCurHostLibrary(curHostLibrary);
 
-                curLibary.setBackgroundColor(R.color.green);
-                curLibary.setText(backendService.getCurHostLibrary());
-                TextView text = (TextView) headerView.findViewById(R.id.speaker_caption);
-                text.setText(R.string.speaker_title);
-                this.adapter = new SpeakersAdapter(mContext);
-                this.list.setAdapter(adapter);
+                    curLibary.setBackgroundColor(R.color.green);
+                    curLibary.setText(backendService.getCurHostLibrary());
+                    TextView text = (TextView) headerView.findViewById(R.id.speaker_caption);
+                    text.setText(R.string.speaker_title);
+                    this.adapter = new SpeakersAdapter(mContext);
+                    this.list.setAdapter(adapter);
 
-                sessionTask();
+                    sessionTask();
+                }
+            } else {
+                clearList();
             }
         }
     }
@@ -214,7 +241,7 @@ public class LibraryFragment extends BaseFragment {
                             if(timeout > tryCnt){
                                 if(null == session) {
                                     session = backendService.getSession(curHost, curHostLibrary);
-                                    Log.i("wwj", "force create session ");
+                                    Log.w(TAG, "force create session ");
                                 }
                                 break;
                             }

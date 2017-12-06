@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import aca.com.remote.R;
+import aca.com.remote.fragment.LibraryFragment;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.tunes.daap.Status;
@@ -49,6 +50,8 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     public final static int NOTIFY_POBR_START  = 0x10;
     public final static int NOTIFY_POBR_CACHE_LIBRARY  = 0x11;
     public final static int NOTIFY_POBR_ADD_LIBRARY  = 0x12;
+    public final static int CHANGE_LIBRARY = 0x01;
+    public final static int ORIGIN_LIBRARY = 0x02;
 
     private BackendService backendService;
     protected static Session session;
@@ -67,10 +70,17 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
             if(null != backendService) {
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
                 backendService.setPrefs(settings);
+                backendService.clearSession();
 
                 backendService.registerProbeListener(SearchLibraryActivity.this);
 //                resultsUpdated.sendEmptyMessage(NOTIFY_POBR_START);
-                backendService.startProbe(false);
+                if (backendService.checkInternal() == true) {
+                    backendService.startProbe(false);
+                    setResult(ORIGIN_LIBRARY);
+                } else {
+                    backendService.startProbe(true);
+                    setResult(CHANGE_LIBRARY);
+                }
             }
 
             ThreadExecutor.runTask(new Runnable() {

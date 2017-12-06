@@ -56,7 +56,8 @@ import java.util.Map;
 public class BackendService extends Service implements ServiceListener {
 
    public final static String TAG = BackendService.class.toString();
-   public final static String PREFS = "tunesremote", PREF_LASTADDR = "lastaddress";
+   public final static String PREF_LASTADDR = "lastaddress";
+    public final static String PREF_LASTINTERNAL = "lastinternal";
 
    public final static int MAX_SESSION_HOLD = 10;
    public final static int DELAY = 500;
@@ -80,6 +81,7 @@ public class BackendService extends Service implements ServiceListener {
 
    protected Session session = null;
    protected String lastaddress = null;
+    protected String lastInternal = null;
    protected static SharedPreferences prefs;
    public PairingDatabase pairdb;
     protected String curHost;
@@ -160,6 +162,20 @@ public class BackendService extends Service implements ServiceListener {
 //        }
 //       return null;
 //    }
+
+    public void clearSession() {
+        this.session =null;
+        if (prefs != null) {
+            SharedPreferences.Editor edit = prefs.edit();
+            edit.putString(BackendService.PREF_LASTADDR, null);
+            edit.commit();
+        }
+
+        pairdb.deleteAll();
+        curHost = null;
+        curHostLibrary = null;
+        curHostServices = null;
+    }
 
     public void updateCurSession(Session session){
         this.session =session;
@@ -302,8 +318,10 @@ public class BackendService extends Service implements ServiceListener {
 
    public void startProbe(boolean force){
       if(force){
+          Log.i(TAG, " PROBE_FORCE_START ");
          mProbeHandle.sendEmptyMessageDelayed(PROBE_FORCE_START,DELAY);
       }else {
+          Log.i(TAG, " PROBE_START ");
          mProbeHandle.sendEmptyMessageDelayed(PROBE_START,DELAY);
       }
    }
@@ -347,8 +365,8 @@ public class BackendService extends Service implements ServiceListener {
                case PROBE_FORCE_START:
                   Log.i(TAG,"msg PROBE_FORCE_START...");
                   try {
-                     BackendService.this.startProbeInternal();
-                     serviceInfoHashMap.clear();
+                      BackendService.this.startProbeInternal();
+                      serviceInfoHashMap.clear();
                   } catch (Exception e) {
                      Log.d(TAG, String.format("startProbe Error: %s", e.getMessage()));
                      e.printStackTrace();
@@ -454,6 +472,28 @@ public class BackendService extends Service implements ServiceListener {
    }
 
 
+   public boolean checkInternal() {
+       boolean ret = true;
+
+       if (prefs != null) {
+           WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
+           WifiInfo wifiinfo = wifi.getConnectionInfo();
+
+           Log.i(TAG, "getSSID() :"+wifiinfo.getSSID());
+           lastInternal = prefs.getString(PREF_LASTINTERNAL, null);
+           Log.i(TAG, "lastInternal :"+lastInternal);
+
+           if (!wifiinfo.getSSID().equals(lastInternal))
+           {
+               ret = false;
+           } else {
+               ret = true;
+           }
+       }
+
+       return ret;
+   }
+
    // this screen will run a network query of all libraries
    // upon selection it will try authenticating with that library, and launch
    // the pairing activity if failed
@@ -485,6 +525,11 @@ public class BackendService extends Service implements ServiceListener {
          zeroConf.addServiceListener(TOUCH_ABLE_TYPE,  BackendService.this);
          zeroConf.addServiceListener(DACP_TYPE,  BackendService.this);
 
+          if (prefs != null) {
+              Editor edit = prefs.edit();
+              edit.putString(PREF_LASTINTERNAL, wifiinfo.getSSID());
+              edit.commit();
+          }
       } else
          checkWifiState();
 

@@ -57,7 +57,11 @@ public class BackendService extends Service implements ServiceListener {
 
    public final static String TAG = BackendService.class.toString();
    public final static String PREF_LASTADDR = "lastaddress";
-    public final static String PREF_LASTINTERNAL = "lastinternal";
+    public final static String PREF_LASTPLAYINTERNAL = "lastplayinternal";
+    public final static String PREF_LASTSEARCHINTERNAL = "lastsearchinternal";
+    public final static String PREF_CURHOST = "curhost";
+    public final static String PREF_CURLIBRARY = "curlibrary";
+    public final static String PREF_CURSERVICE = "curservice";
 
    public final static int MAX_SESSION_HOLD = 10;
    public final static int DELAY = 500;
@@ -81,7 +85,8 @@ public class BackendService extends Service implements ServiceListener {
 
    protected Session session = null;
    protected String lastaddress = null;
-    protected String lastInternal = null;
+    protected String lastPlayInternal = null;
+    protected String lastSearchInternal = null;
    protected static SharedPreferences prefs;
    public PairingDatabase pairdb;
     protected String curHost;
@@ -471,29 +476,6 @@ public class BackendService extends Service implements ServiceListener {
          probeListener.OnCheckWifiState();
    }
 
-
-   public boolean checkInternal() {
-       boolean ret = true;
-
-       if (prefs != null) {
-           WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
-           WifiInfo wifiinfo = wifi.getConnectionInfo();
-
-           Log.i(TAG, "getSSID() :"+wifiinfo.getSSID());
-           lastInternal = prefs.getString(PREF_LASTINTERNAL, null);
-           Log.i(TAG, "lastInternal :"+lastInternal);
-
-           if (!wifiinfo.getSSID().equals(lastInternal))
-           {
-               ret = false;
-           } else {
-               ret = true;
-           }
-       }
-
-       return ret;
-   }
-
    // this screen will run a network query of all libraries
    // upon selection it will try authenticating with that library, and launch
    // the pairing activity if failed
@@ -524,12 +506,12 @@ public class BackendService extends Service implements ServiceListener {
          zeroConf = JmDNS.create(addr, HOSTNAME);
          zeroConf.addServiceListener(TOUCH_ABLE_TYPE,  BackendService.this);
          zeroConf.addServiceListener(DACP_TYPE,  BackendService.this);
-
+/*
           if (prefs != null) {
               Editor edit = prefs.edit();
               edit.putString(PREF_LASTINTERNAL, wifiinfo.getSSID());
               edit.commit();
-          }
+          }*/
       } else
          checkWifiState();
 
@@ -591,26 +573,136 @@ public class BackendService extends Service implements ServiceListener {
    }
 
     public String getCurHost(){
+        if (prefs != null) {
+            this.curHost = prefs.getString(PREF_CURHOST, null);
+        }
         return this.curHost;
     }
 
     public void setCurHost(String host){
         this.curHost = host;
+        if (prefs != null) {
+            Editor edit = prefs.edit();
+            edit.putString(PREF_CURHOST, host);
+            edit.commit();
+        }
     }
 
     public String getCurHostLibrary(){
+        if (prefs != null) {
+            this.curHostLibrary = prefs.getString(PREF_CURLIBRARY, null);
+        }
         return this.curHostLibrary;
     }
 
     public void setCurHostLibrary(String library){
         this.curHostLibrary = library;
+        if (prefs != null) {
+            Editor edit = prefs.edit();
+            edit.putString(PREF_CURLIBRARY, library);
+            edit.commit();
+        }
     }
 
     public String getCurHostServices(){
+        if (prefs != null) {
+            this.curHostServices = prefs.getString(PREF_CURSERVICE, null);
+        }
         return this.curHostServices;
     }
 
     public void setCurHostServices(String services){
         this.curHostServices = services;
+        if (prefs != null) {
+            Editor edit = prefs.edit();
+            edit.putString(PREF_CURSERVICE, services);
+            edit.commit();
+        }
+    }
+
+    public void setLastPlayInternal() {
+        if (prefs != null) {
+            WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiinfo = wifi.getConnectionInfo();
+
+            Editor edit = prefs.edit();
+            edit.putString(PREF_LASTPLAYINTERNAL, wifiinfo.getSSID());
+            edit.commit();
+        }
+    }
+
+    public String getLastPlayInternal() {
+        if (prefs != null) {
+            lastPlayInternal = prefs.getString(PREF_LASTPLAYINTERNAL, null);
+        }
+
+        return lastPlayInternal;
+    }
+
+    public boolean checkPlayInternal() {
+        boolean ret = true;
+
+        if (prefs != null) {
+            WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiinfo = wifi.getConnectionInfo();
+
+            Log.i(TAG, "getSSID() :"+wifiinfo.getSSID());
+            lastPlayInternal = prefs.getString(PREF_LASTPLAYINTERNAL, null);
+            Log.i(TAG, "lastPlayInternal :"+lastPlayInternal);
+
+            if (!wifiinfo.getSSID().equals(lastPlayInternal))
+            {
+                Log.i(TAG, "different PlayInternal");
+                ret = false;
+            } else {
+                Log.i(TAG, "same PlayInternal");
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    public void setLastSearchInternal() {
+        if (prefs != null) {
+            WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiinfo = wifi.getConnectionInfo();
+
+            Editor edit = prefs.edit();
+            edit.putString(PREF_LASTSEARCHINTERNAL, wifiinfo.getSSID());
+            edit.commit();
+        }
+    }
+
+    public String getLastSearchInternal() {
+        if (prefs != null) {
+            lastSearchInternal = prefs.getString(PREF_LASTSEARCHINTERNAL, null);
+        }
+
+        return lastSearchInternal;
+    }
+
+    public boolean checkSearchInternal() {
+        boolean ret = true;
+
+        if (prefs != null) {
+            WifiManager wifi = (WifiManager) BackendService.this.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiinfo = wifi.getConnectionInfo();
+
+            Log.i(TAG, "getSSID() :"+wifiinfo.getSSID());
+            lastSearchInternal = prefs.getString(PREF_LASTSEARCHINTERNAL, null);
+            Log.i(TAG, "lastSearchInternal :"+lastSearchInternal);
+
+            if (!wifiinfo.getSSID().equals(lastSearchInternal))
+            {
+                Log.i(TAG, "different SearchInternal");
+                ret = false;
+            } else {
+                Log.i(TAG, "same SearchInternal");
+                ret = true;
+            }
+        }
+
+        return ret;
     }
 }

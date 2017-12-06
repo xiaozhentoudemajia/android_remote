@@ -50,6 +50,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     public final static int NOTIFY_POBR_START  = 0x10;
     public final static int NOTIFY_POBR_CACHE_LIBRARY  = 0x11;
     public final static int NOTIFY_POBR_ADD_LIBRARY  = 0x12;
+    public final static int NOTIFY_CHECK_STATUS  = 0x13;
     public final static int CHANGE_LIBRARY = 0x01;
     public final static int ORIGIN_LIBRARY = 0x02;
 
@@ -59,8 +60,6 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     protected LibraryAdapter adapter;
     protected ListView list;
     private Context context;
-    protected String curHost;
-    protected String curHostLibrary;
     private ActionBar ab;
 
     public ServiceConnection connection = new ServiceConnection() {
@@ -68,21 +67,14 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
             Log.w(TAG, "onServiceConnected");
             backendService = ((BackendService.BackendBinder) service).getService();
             if(null != backendService) {
-                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
-                backendService.setPrefs(settings);
-                backendService.clearSession();
+//                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+//                backendService.setPrefs(settings);
 
                 backendService.registerProbeListener(SearchLibraryActivity.this);
 //                resultsUpdated.sendEmptyMessage(NOTIFY_POBR_START);
-                if (backendService.checkInternal() == true) {
-                    backendService.startProbe(false);
-                    setResult(ORIGIN_LIBRARY);
-                } else {
-                    backendService.startProbe(true);
-                    setResult(CHANGE_LIBRARY);
-                }
+                resultsUpdated.sendEmptyMessage(NOTIFY_CHECK_STATUS);
             }
-
+/*
             ThreadExecutor.runTask(new Runnable() {
                 public void run() {
                     backendService = ((BackendService.BackendBinder) service).getService();
@@ -90,7 +82,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                         session = backendService.getSession();
                     }
                 }
-            });
+            });*/
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -166,6 +158,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                         backendService.setCurHost(address);
                         backendService.setCurHostLibrary(library);
                         backendService.setCurHostServices(musicService);
+                        backendService.setLastPlayInternal();
 
                         finish();
                     }
@@ -179,6 +172,8 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
         super.onResume();
         try {
             checkWifiState();
+
+            resultsUpdated.sendEmptyMessage(NOTIFY_CHECK_STATUS);
         } catch (NullPointerException npe) {
             npe.printStackTrace();
         }
@@ -190,6 +185,15 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
         if (context !=null && connection!= null) {
             context.unbindService(connection);
             backendService.unregisterProbeListener(this);
+        }
+    }
+
+    private void clearList() {
+        int size = adapter.known.size();
+
+        if (size > 0) {
+            adapter.known.removeAll(adapter.known);
+            adapter.notifyDataSetChanged();
         }
     }
 
@@ -261,6 +265,19 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                     boolean result = adapter.notifyFound(serviceInfo);
                     if(result) {
                         resultsUpdated.sendEmptyMessage(-1);
+                    }
+                    break;
+                case NOTIFY_CHECK_STATUS:
+                    if (backendService != null) {
+                        clearList();
+                        if (backendService.checkSearchInternal() == true) {
+                            backendService.startProbe(false);
+                            setResult(ORIGIN_LIBRARY);
+                        } else {
+                            backendService.setLastSearchInternal();
+                            backendService.startProbe(true);
+                            setResult(CHANGE_LIBRARY);
+                        }
                     }
                     break;
                 default:

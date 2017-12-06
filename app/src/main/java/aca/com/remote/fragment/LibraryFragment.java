@@ -4,10 +4,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -59,6 +61,7 @@ public class LibraryFragment extends BaseFragment {
 
     protected long cachedVolume = -1;
     protected long cachedTime = -1;
+    public static final int CHECK_STATUS = 0x10;
     public static final int NOTIFY_SPEAKERS = 0x80;
     public final static long CACHE_TIME = 10000;
     public final static int tryCnt = 10;
@@ -67,6 +70,11 @@ public class LibraryFragment extends BaseFragment {
         @Override
         public void onServiceConnected(ComponentName name, final IBinder service) {
             backendService = ((BackendService.BackendBinder) service).getService();
+            if (backendService != null) {
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mContext);
+                backendService.setPrefs(settings);
+                statusUpdate.sendEmptyMessage(CHECK_STATUS);
+            }
         }
 
         @Override
@@ -82,6 +90,36 @@ public class LibraryFragment extends BaseFragment {
         public void handleMessage(Message msg) {
             // update gui based on severity
             switch (msg.what) {
+                case CHECK_STATUS:
+                    if (backendService != null) {
+                        Log.i(TAG, "current host: " + backendService.getCurHost());
+                        Log.i(TAG, "current library: " + backendService.getCurHostLibrary());
+                        Log.i(TAG, "current service: " + backendService.getCurHostServices());
+                        Log.i(TAG, "last play internal: " + backendService.getLastPlayInternal());
+
+                        if (backendService.checkPlayInternal() == true) {
+                            clearList();
+                            if (backendService.getCurHost() != null
+                                    && backendService.getCurHostLibrary() != null) {
+                                curHost = backendService.getCurHost();
+                                setCurHost(curHost);
+                                curHostLibrary = backendService.getCurHostLibrary();
+                                setCurHostLibrary(curHostLibrary);
+
+                                curLibary.setBackgroundColor(R.color.green);
+                                curLibary.setText(backendService.getCurHostLibrary());
+                                TextView text = (TextView) headerView.findViewById(R.id.speaker_caption);
+                                text.setText(R.string.speaker_title);
+                                adapter = new SpeakersAdapter(mContext);
+                                list.setAdapter(adapter);
+
+                                sessionTask();
+                            }
+                        } else {
+                            clearList();
+                        }
+                    }
+                    break;
                 case NOTIFY_SPEAKERS:
                     adapter.notifyDataSetChanged();
                     mContext.setProgressBarIndeterminateVisibility(false);
@@ -156,15 +194,6 @@ public class LibraryFragment extends BaseFragment {
         return view;
     }
 
-    private void clearList() {
-        int size = SPEAKERS.size();
-
-        if (size > 0) {
-            SPEAKERS.removeAll(SPEAKERS);
-            statusUpdate.sendEmptyMessage(NOTIFY_SPEAKERS);
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i(TAG, "onActivityResult:"+resultCode);
@@ -181,38 +210,22 @@ public class LibraryFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (backendService != null) {
-            Log.i(TAG, "current host: " + backendService.getCurHost());
-            Log.i(TAG, "current library: " + backendService.getCurHostLibrary());
-            Log.i(TAG, "current service: " + backendService.getCurHostServices());
-
-            if (backendService.checkInternal() == true) {
-                if (backendService.getCurHost() != null
-                        && backendService.getCurHostLibrary() != null) {
-                    curHost = backendService.getCurHost();
-                    setCurHost(curHost);
-                    curHostLibrary = backendService.getCurHostLibrary();
-                    setCurHostLibrary(curHostLibrary);
-
-                    curLibary.setBackgroundColor(R.color.green);
-                    curLibary.setText(backendService.getCurHostLibrary());
-                    TextView text = (TextView) headerView.findViewById(R.id.speaker_caption);
-                    text.setText(R.string.speaker_title);
-                    this.adapter = new SpeakersAdapter(mContext);
-                    this.list.setAdapter(adapter);
-
-                    sessionTask();
-                }
-            } else {
-                clearList();
-            }
-        }
+        statusUpdate.sendEmptyMessage(CHECK_STATUS);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mContext.unbindService(connection);
+    }
+
+    private void clearList() {
+        int size = SPEAKERS.size();
+
+        if (size > 0) {
+            SPEAKERS.removeAll(SPEAKERS);
+            statusUpdate.sendEmptyMessage(NOTIFY_SPEAKERS);
+        }
     }
 
     void sessionTask() {

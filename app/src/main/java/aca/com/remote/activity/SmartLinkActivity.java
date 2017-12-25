@@ -83,7 +83,7 @@ public class SmartLinkActivity extends AppCompatActivity {
     public void onConnectBtnClick(View view) {
         String ssid = mSSIDEditText.getText().toString();
         String password = mPasswordEditText.getText().toString();
-        if (ssid.isEmpty() || password.isEmpty()) {
+        if (ssid.isEmpty()) {
             Context context = getApplicationContext();
             CharSequence text = "Please input ssid and password.";
             int duration = Toast.LENGTH_SHORT;

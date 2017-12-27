@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,6 +30,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import aca.com.remote.R;
 import aca.com.remote.fragment.LibraryFragment;
@@ -51,6 +54,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     public final static int NOTIFY_POBR_CACHE_LIBRARY  = 0x11;
     public final static int NOTIFY_POBR_ADD_LIBRARY  = 0x12;
     public final static int NOTIFY_CHECK_STATUS  = 0x13;
+    public final static int CMD_FORCE_SCAN = 0x20;
     public final static int CHANGE_LIBRARY = 0x01;
     public final static int ORIGIN_LIBRARY = 0x02;
 
@@ -61,6 +65,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     protected ListView list;
     private Context context;
     private ActionBar ab;
+    private Timer mTimer = new Timer();
 
     public ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, final IBinder service) {
@@ -71,7 +76,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
 //                backendService.setPrefs(settings);
 
                 backendService.registerProbeListener(SearchLibraryActivity.this);
-//                resultsUpdated.sendEmptyMessage(NOTIFY_POBR_START);
+                resultsUpdated.sendEmptyMessage(NOTIFY_POBR_START);
                 resultsUpdated.sendEmptyMessage(NOTIFY_CHECK_STATUS);
             }
 /*
@@ -164,6 +169,8 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                     }
                 }
             });
+
+            setTimerTask();
         }
     }
 
@@ -172,8 +179,8 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
         super.onResume();
         try {
             checkWifiState();
-
-            resultsUpdated.sendEmptyMessage(NOTIFY_CHECK_STATUS);
+//            resultsUpdated.sendEmptyMessage(NOTIFY_POBR_START);
+//            resultsUpdated.sendEmptyMessage(NOTIFY_CHECK_STATUS);
         } catch (NullPointerException npe) {
             npe.printStackTrace();
         }
@@ -183,6 +190,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
     public void onDestroy() {
         super.onDestroy();
         if (context !=null && connection!= null) {
+            mTimer.cancel();
             context.unbindService(connection);
             backendService.unregisterProbeListener(this);
         }
@@ -195,6 +203,15 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
             adapter.known.removeAll(adapter.known);
             adapter.notifyDataSetChanged();
         }
+    }
+
+    void setTimerTask() {
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                resultsUpdated.sendEmptyMessage(CMD_FORCE_SCAN);
+            }
+        }, 15000, 15000);
     }
 
     /**
@@ -269,7 +286,7 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                     break;
                 case NOTIFY_CHECK_STATUS:
                     if (backendService != null) {
-                        clearList();
+//                        clearList();
                         if (backendService.checkSearchInternal() == true) {
                             backendService.startProbe(false);
                             setResult(ORIGIN_LIBRARY);
@@ -279,6 +296,11 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                             setResult(CHANGE_LIBRARY);
                         }
                     }
+                    break;
+                case CMD_FORCE_SCAN:
+                    adapter.known.clear();
+                    backendService.setLastSearchInternal();
+                    backendService.startProbe(true);
                     break;
                 default:
                     adapter.notifyDataSetChanged();
@@ -375,6 +397,15 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
                 Log.d(TAG, String.format("ZeroConf Title: %s", title));
                 Log.d(TAG, String.format("ZeroConf Library: %s", library));
 
+                if (backendService != null) {
+                    if (backendService.getCurHostLibrary() != null) {
+                        ((ImageView) convertView.findViewById(R.id.select_lib)).setImageResource(backendService.getCurHostLibrary().equals(title)?
+                                R.drawable.dailly_prs
+                                : R.drawable.dailly_normal);
+                    } else {
+                        ((ImageView) convertView.findViewById(R.id.select_lib)).setImageResource(R.drawable.dailly_normal);
+                    }
+                }
                 ((TextView) convertView.findViewById(R.id.text1)).setText(title);
                 ((TextView) convertView.findViewById(R.id.text2)).setText(library);
             } catch (Exception e) {

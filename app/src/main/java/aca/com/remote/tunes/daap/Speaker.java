@@ -52,6 +52,7 @@ public class Speaker {
     * the master iTunes-Volume.
     */
    private int absoluteVolume;
+   private int channel;
 
    public int getAbsoluteVolume() {
       return absoluteVolume;
@@ -86,6 +87,14 @@ public class Speaker {
 
    public void setActive(boolean active) {
       this.active = active;
+   }
+
+   public void setChannel(int channel) {
+      this.channel = channel;
+   }
+
+   public int getChannel() {
+      return this.channel;
    }
 
    public String getName() {

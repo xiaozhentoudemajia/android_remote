@@ -50,6 +50,8 @@
             android:authorities="aca.com.remote.tunes.recent"/>
 
 
+        <service android:name="aca.com.nanohttpd.HttpService"/>
+
         <activity
             android:name=".activity.TracksActivity"
             android:screenOrientation="portrait" />

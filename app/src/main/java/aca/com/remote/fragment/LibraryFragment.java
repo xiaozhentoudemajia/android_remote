@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,8 +22,8 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.content.Intent;
 import android.widget.CheckBox;
-import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.EditText;
@@ -29,7 +31,11 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import aca.com.nanohttpd.HttpServerImpl;
+import aca.com.nanohttpd.HttpService;
 import aca.com.remote.R;
 import aca.com.remote.activity.SearchLibraryActivity;
 import aca.com.remote.tunes.BackendService;
@@ -58,13 +64,16 @@ public class LibraryFragment extends BaseFragment {
     protected SpeakersAdapter adapter;
     private View headerView;
     private int requestCode = 0;
+    private ProgressBar progress;
 
     protected long cachedVolume = -1;
     protected long cachedTime = -1;
     public static final int CHECK_STATUS = 0x10;
     public static final int NOTIFY_SPEAKERS = 0x80;
+    public static final int CMD_FORCE_SCAN = 0x20;
     public final static long CACHE_TIME = 10000;
     public final static int tryCnt = 10;
+    private Timer mTimer = new Timer();
 
     public ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -84,6 +93,15 @@ public class LibraryFragment extends BaseFragment {
         }
     };
 
+    void setTimerTask() {
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                statusUpdate.sendEmptyMessage(CHECK_STATUS);
+            }
+        }, 15000, 15000);
+    }
+
     protected Handler statusUpdate = new Handler() {
 
         @Override
@@ -97,8 +115,10 @@ public class LibraryFragment extends BaseFragment {
                         Log.i(TAG, "current service: " + backendService.getCurHostServices());
                         Log.i(TAG, "last play internal: " + backendService.getLastPlayInternal());
 
+                        clearList();
                         if (backendService.checkPlayInternal() == true) {
-                            clearList();
+//                            clearList();
+                            progress.setVisibility(View.VISIBLE);
                             if (backendService.getCurHost() != null
                                     && backendService.getCurHostLibrary() != null) {
                                 curHost = backendService.getCurHost();
@@ -106,7 +126,7 @@ public class LibraryFragment extends BaseFragment {
                                 curHostLibrary = backendService.getCurHostLibrary();
                                 setCurHostLibrary(curHostLibrary);
 
-                                curLibary.setBackgroundColor(R.color.green);
+                                curLibary.setBackgroundColor(R.color.menu_item_blue);
                                 curLibary.setText(backendService.getCurHostLibrary());
                                 TextView text = (TextView) headerView.findViewById(R.id.speaker_caption);
                                 text.setText(R.string.speaker_title);
@@ -116,7 +136,7 @@ public class LibraryFragment extends BaseFragment {
                                 sessionTask();
                             }
                         } else {
-                            clearList();
+//                            clearList();
                         }
                     }
                     break;
@@ -141,6 +161,8 @@ public class LibraryFragment extends BaseFragment {
 
                     });
                     break;
+                case CMD_FORCE_SCAN:
+                    break;
             }
 
             //checkShuffle();
@@ -154,6 +176,8 @@ public class LibraryFragment extends BaseFragment {
 
         Intent intent = new Intent(mContext, BackendService.class);
         mContext.bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+        setHttpServer();
     }
 
     @Nullable
@@ -190,6 +214,10 @@ public class LibraryFragment extends BaseFragment {
 
         headerView = inflater.inflate(R.layout.speaker_caption, null, false);
         this.list.addHeaderView(headerView);
+        progress = (ProgressBar) headerView.findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
+
+//        setTimerTask();
 
         return view;
     }
@@ -226,6 +254,23 @@ public class LibraryFragment extends BaseFragment {
             SPEAKERS.removeAll(SPEAKERS);
             statusUpdate.sendEmptyMessage(NOTIFY_SPEAKERS);
         }
+    }
+
+    public static String getLocalIpStr(Context context) {
+        WifiManager wifiManager=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        return intToIpAddr(wifiInfo.getIpAddress());
+    }
+
+    private static String intToIpAddr(int ip) {
+        return (ip & 0xff) + "." + ((ip>>8)&0xff) + "." + ((ip>>16)&0xff) + "." + ((ip>>24)&0xff);
+    }
+
+    private void setHttpServer() {
+        Log.i("wwj", "请在PC浏览器中输入:\n\n"+getLocalIpStr(mContext)+":"+ HttpServerImpl.DEFAULT_SERVER_PORT);
+
+        Intent intent = new Intent(mContext,HttpService.class);
+        mContext.startService(intent);
     }
 
     void sessionTask() {
@@ -390,7 +435,7 @@ public class LibraryFragment extends BaseFragment {
                 TextView speakerTypeTextView = (TextView) row.findViewById(R.id.speakerTypeTextView);
                 final CheckBox activeCheckBox = (CheckBox) row.findViewById(R.id.speakerActiveCheckBox);
                 SeekBar volumeBar = (SeekBar) row.findViewById(R.id.speakerVolumeBar);
-                ImageButton renameButton = (ImageButton) row.findViewById(R.id.speakerRename);
+                Button setChannel = (Button) row.findViewById(R.id.setChannel);
 
                 /*************************************************************
                  * Set view properties
@@ -427,20 +472,54 @@ public class LibraryFragment extends BaseFragment {
                     volumeBar.setOnSeekBarChangeListener(new VolumeSeekBarListener(speaker));
                 } else {
                     volumeBar.setEnabled(true);
-                    volumeBar.setProgress(30);
+                    volumeBar.setProgress(0);
                 }
 
-                renameButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //wwj showRenameDialog();
-                    }
-                });
+                setChannel.setOnClickListener(new SetChannelListener(speaker));
+                Speaker spk = SPEAKERS.get(position);
                 return row;
             } catch (RuntimeException e) {
                 Log.e(TAG, "Error when rendering speaker item: ", e);
                 throw e;
             }
+        }
+    }
+
+    public class SetChannelListener implements View.OnClickListener {
+        private final Speaker speaker;
+        private int index=0;
+
+        public SetChannelListener(Speaker speaker) {
+            this.speaker = speaker;
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (index < 2) {
+                index++;
+            } else {
+                index = 0;
+            }
+            switch (index) {
+                case 0:
+                    ((Button)view).setText("L/R");
+                    break;
+                case 1:
+                    ((Button)view).setText("L");
+                    break;
+                case 2:
+                    ((Button)view).setText("R");
+                    break;
+            }
+            ThreadExecutor.runTask(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            status.setSpeakerChannel(speaker.getId(), index);
+                        }
+                    }
+            );
+
         }
     }
 

@@ -450,6 +450,8 @@ public class Status {
 				int relativeVolume = (int) mdcl.getNumberLong("cmvo");
 				boolean isActive = mdcl.containsKey("caia");
 				speaker.setActive(isActive);
+				int channel = (int) mdcl.getNumberLong("cmvp");
+				speaker.setChannel(channel);
 				// mastervolume/100 * relativeVolume/100 * 100
 				int absoluteVolume = isActive ? (int) masterVolume * relativeVolume / 100 : 0;
 				speaker.setAbsoluteVolume(absoluteVolume);
@@ -503,6 +505,22 @@ public class Status {
 
 		} catch (Exception e) {
 			Log.e(TAG, "Could not set speakers: ", e);
+		}
+	}
+
+	private void setChannel(long speakerId, int channel) throws Exception {
+		String url;
+		Log.i("wwj", "set channel :  "+channel);
+		url = String.format("%s/ctrl-int/1/setproperty?dmcp.channel=%d&include-speaker-id=%s" + "&session-id=%s",
+				session.getRequestBase(), channel, speakerId, session.sessionId);
+		RequestHelper.request(url, false);
+	}
+
+	public void setSpeakerChannel(long speakerId, int channel) {
+		try {
+			setChannel(speakerId, channel);
+		} catch (Exception e) {
+			Log.e(TAG, "Error when setting speaker volume: ", e);
 		}
 	}
 

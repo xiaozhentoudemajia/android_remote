@@ -4,10 +4,10 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/select"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:background="@drawable/btn_play"
+        android:id="@+id/select_lib"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:background="@drawable/dailly_normal"
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="12dp"
         android:clickable="true" />

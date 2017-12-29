@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+import aca.com.nanohttpd.HttpService;
 import aca.com.remote.MediaAidlInterface;
 import aca.com.remote.R;
 import aca.com.remote.fragment.QuickControlsFragment;
@@ -37,6 +38,23 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
     private QuickControlsFragment fragment; //底部播放控制栏
     private String TAG = "BaseActivity";
     private ArrayList<MusicStateListener> mMusicListener = new ArrayList<>();
+    private HttpService.httpBinder binder = null;
+    private static Session mSession;
+    private static String mMusicService;
+    private static String mCurHost;
+    private static String mCurHostLibary;
+
+    public ServiceConnection connectionHttpServer = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            binder = (HttpService.httpBinder)iBinder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            binder = null;
+        }
+    };
 
     /**
      * 更新播放队列
@@ -150,8 +168,47 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
     }
 
     public void updateTrackInfo(Session session) {
-        if (fragment != null)
+        if (fragment != null) {
             fragment.updateTrackInfo(session);
+            fragment.updateHttpBinder(binder);
+        }
+    }
+
+    public void httpPlay(String url) {
+        if (binder != null)
+            binder.setTransPath(url);
+    }
+
+    public void setCurHost(String host) {
+        mCurHost = host;
+    }
+
+    public String getCurHost() {
+        return mCurHost;
+    }
+
+    public void setCurHostLibrary(String library) {
+        mCurHostLibary = library;
+    }
+
+    public String getCurHostLibrary() {
+        return mCurHostLibary;
+    }
+
+    public void setSession(Session session) {
+        mSession = session;
+    }
+
+    public Session getSession() {
+        return mSession;
+    }
+
+    public void setMusicService(String Service) {
+        mMusicService = Service;
+    }
+
+    public String getMusicService() {
+        return mMusicService;
     }
 
     @Override
@@ -174,6 +231,7 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
         f.addAction(MediaService.MUSIC_LODING);
         registerReceiver(mPlaybackStatus, new IntentFilter(f));
         showQuickControl(true);
+        bindService(new Intent(this, HttpService.class), connectionHttpServer, Context.BIND_AUTO_CREATE);
     }
 
 
@@ -197,7 +255,7 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
         } catch (final Throwable e) {
         }
         mMusicListener.clear();
-
+        unbindService(connectionHttpServer);
     }
 
     public void unbindService() {

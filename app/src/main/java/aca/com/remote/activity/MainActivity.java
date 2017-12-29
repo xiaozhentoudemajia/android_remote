@@ -49,10 +49,6 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
     private ListView mLvLeftMenu;
     private long time = 0;
     private SplashScreen splashScreen;
-    private static Session mSession;
-    private static String mMusicService;
-    private static String mCurHost;
-    private static String mCurHostLibary;
 
     public void onCreate(Bundle savedInstanceState) {
         splashScreen = new SplashScreen(this);
@@ -321,37 +317,5 @@ public class MainActivity extends BaseActivity implements CardPickerDialog.Click
 //        moveTaskToBack(true);
         // System.exit(0);
         // finish();
-    }
-
-    public void setCurHost(String host) {
-        mCurHost = host;
-    }
-
-    public String getCurHost() {
-        return mCurHost;
-    }
-
-    public void setCurHostLibrary(String library) {
-        mCurHostLibary = library;
-    }
-
-    public String getCurHostLibrary() {
-        return mCurHostLibary;
-    }
-
-    public void setSession(Session session) {
-        mSession = session;
-    }
-
-    public Session getSession() {
-        return mSession;
-    }
-
-    public void setMusicService(String Service) {
-        mMusicService = Service;
-    }
-
-    public String getMusicService() {
-        return mMusicService;
     }
 }

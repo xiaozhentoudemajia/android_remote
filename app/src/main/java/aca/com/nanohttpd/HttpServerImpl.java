@@ -33,6 +33,7 @@ public class HttpServerImpl extends NanoHTTPD {
     private static final String REQUEST_TEST = "/test";
     private static final String REQUEST_ACTION_GET_FILE = "/getFile";
     private static final String REQUEST_ACTION_GET_FILE_LIST = "/getFileList";
+    private String transPath;
 
     public HttpServerImpl() {
         super(DEFAULT_SERVER_PORT);
@@ -60,9 +61,7 @@ public class HttpServerImpl extends NanoHTTPD {
         }else if(REQUEST_ACTION_GET_FILE.equals(strUri)){ // 下载文件
         	Map<String,String> params = session.getParms();
         	// 下载的文件名称
-        	String fileName = params.get("fileName");
-        	
-        	
+        	String fileName = transPath;//params.get("fileName");
         	File file = new File(fileName);
         	if(file.exists()){
         		if(file.isDirectory()){
@@ -129,7 +128,7 @@ public class HttpServerImpl extends NanoHTTPD {
     	String url = session.getUri();
         StringBuilder builder = new StringBuilder();
         builder.append("<!DOCTYPE html><html><body>");        
-        builder.append("Sorry, Can't Found "+url + " !");        
+        builder.append("Sorry, Can't Found "+url + " !");
         builder.append("</body></html>\n");
         return Response.newFixedLengthResponse(builder.toString());
     }
@@ -140,5 +139,11 @@ public class HttpServerImpl extends NanoHTTPD {
      */
     private Response responseJson(){
     	return Response.newFixedLengthResponse("调用成功");
+    }
+
+
+    public void setTransPath(String path){
+        transPath = path;
+        Log.i("wwj", "setTransPath to "+path);
     }
 }

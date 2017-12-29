@@ -21,7 +21,7 @@ public class HttpService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		return null;
+		return new httpBinder();
 	}
 
 	@Override
@@ -52,5 +52,11 @@ public class HttpService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		flags = START_STICKY;
 		return super.onStartCommand(intent, flags, startId);
+	}
+
+	public class httpBinder extends android.os.Binder{
+		public void setTransPath(String data){
+			HttpService.this.mHttpServer.setTransPath(data);
+		}
 	}
 }

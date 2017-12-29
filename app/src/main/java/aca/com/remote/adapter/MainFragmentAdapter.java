@@ -22,7 +22,9 @@ import android.widget.Toast;
 import aca.com.magicasakura.widgets.TintImageView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import aca.com.remote.R;
+import aca.com.remote.activity.BaseActivity;
 import aca.com.remote.activity.DownActivity;
+import aca.com.remote.activity.MainActivity;
 import aca.com.remote.activity.PlaylistActivity;
 import aca.com.remote.activity.PlaylistManagerActivity;
 import aca.com.remote.activity.RecentActivity;
@@ -30,6 +32,7 @@ import aca.com.remote.activity.TabActivity;
 import aca.com.remote.info.Playlist;
 import aca.com.remote.provider.PlaylistInfo;
 import aca.com.remote.provider.PlaylistsManager;
+import aca.com.remote.tunes.util.Constants;
 import aca.com.remote.uitl.IConstants;
 
 import java.util.ArrayList;
@@ -164,6 +167,8 @@ public class MainFragmentAdapter extends RecyclerView.Adapter<MainFragmentAdapte
                             @Override
                             public void run() {
                                 Intent intent = new Intent(mContext, TabActivity.class);
+                                intent.putExtra(Constants.EXTRA_ADDRESS, ((BaseActivity)mContext).getCurHost());
+                                intent.putExtra(Constants.EXTRA_LIBRARY, ((BaseActivity)mContext).getCurHostLibrary());
                                 intent.putExtra("page_number", 0);
                                 mContext.startActivity(intent);
                             }

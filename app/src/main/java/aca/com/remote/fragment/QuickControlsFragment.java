@@ -34,6 +34,8 @@ import com.facebook.imagepipeline.image.ImageInfo;
 import com.facebook.imagepipeline.image.QualityInfo;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
+
+import aca.com.nanohttpd.HttpService;
 import aca.com.remote.MainApplication;
 import aca.com.remote.R;
 import aca.com.remote.activity.PlayingActivity;
@@ -74,6 +76,7 @@ public class QuickControlsFragment extends BaseFragment {
     private String TAG = "QuickControlsFragment";
     private static QuickControlsFragment fragment;
     private Session mSession;
+    private HttpService.httpBinder binder;
     private static Status status;
     protected boolean dragging = false;
 
@@ -137,7 +140,6 @@ public class QuickControlsFragment extends BaseFragment {
                     }, 60);
                 }
                  */
-
                 if (mSession != null) {
                     if (status.getPlayStatus() == Status.STATE_PLAYING) {
                         mSession.controlPause();
@@ -334,6 +336,10 @@ public class QuickControlsFragment extends BaseFragment {
             status.updateHandler(null);
             status = null;
         }
+    }
+
+    public void updateHttpBinder(HttpService.httpBinder ibinder) {
+        binder = ibinder;
     }
 
     protected Handler statusUpdate = new Handler() {

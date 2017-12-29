@@ -68,24 +68,28 @@ public class BaseFragment extends Fragment implements MusicStateListener {
 
     }
 
+    void httpPlay(String url) {
+        ((BaseActivity) getActivity()).httpPlay(url);
+    }
+
     void setCurHost(String host) {
-        ((MainActivity)mContext).setCurHost(host);
+        ((BaseActivity) getActivity()).setCurHost(host);
     }
 
 
     void setCurHostLibrary(String library) {
-        ((MainActivity)mContext).setCurHostLibrary(library);
+        ((BaseActivity) getActivity()).setCurHostLibrary(library);
     }
 
     void setSession(Session session) {
-        ((MainActivity)mContext).setSession(session);
+        ((BaseActivity) getActivity()).setSession(session);
     }
 
     void setMusicService(String service) {
-        ((MainActivity)mContext).setMusicService(service);
+        ((BaseActivity) getActivity()).setMusicService(service);
     }
 
     void updateTrackInfo(Session session) {
-        ((MainActivity)mContext).updateTrackInfo(session);
+        ((BaseActivity) getActivity()).updateTrackInfo(session);
     }
 }

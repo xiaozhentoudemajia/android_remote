@@ -187,6 +187,12 @@ public class Session {
 		});
 	}
 
+	public void httpserver(String url) {
+		Log.i("wwj", String.format("httpserver :%s", url));
+		this.fireAction(String.format("%s/ctrl-int/1/setproperty?shoutcast-url=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
+				this.getRequestBase(), url, this.sessionId), false);
+	}
+
 	public void rename(String name) {
 		Log.w(TAG, String.format("rename position:%s", name));
 		this.fireAction(String.format("%s/rename?name=%s", this.getRequestBase(), name), false);

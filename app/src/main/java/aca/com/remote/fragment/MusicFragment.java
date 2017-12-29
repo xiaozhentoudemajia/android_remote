@@ -1,10 +1,16 @@
 package aca.com.remote.fragment;
 
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -20,6 +26,8 @@ import android.widget.TextView;
 
 import aca.com.magicasakura.widgets.TintImageView;
 import com.github.promeg.pinyinhelper.Pinyin;
+
+import aca.com.nanohttpd.HttpServerImpl;
 import aca.com.remote.R;
 import aca.com.remote.activity.SelectActivity;
 import aca.com.remote.handler.HandlerUtil;
@@ -32,6 +40,7 @@ import aca.com.remote.uitl.PreferencesUtility;
 import aca.com.remote.uitl.SortOrder;
 import aca.com.remote.widget.DividerItemDecoration;
 import aca.com.remote.widget.SideBar;
+import aca.com.remote.activity.TabActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +62,6 @@ public class MusicFragment extends BaseFragment {
     private TextView dialogText;
     private HashMap<String, Integer> positionMap = new HashMap<>();
     private boolean isAZSort = true;
-
 
     private void loadView() {
         //setUservisibleHint 可能先与attach
@@ -368,6 +376,16 @@ public class MusicFragment extends BaseFragment {
         }
 
 
+        public String getLocalIpStr(Context context) {
+            WifiManager wifiManager=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            return intToIpAddr(wifiInfo.getIpAddress());
+        }
+
+        private String intToIpAddr(int ip) {
+            return (ip & 0xff) + "." + ((ip>>8)&0xff) + "." + ((ip>>16)&0xff) + "." + ((ip>>24)&0xff);
+        }
+
         public class ListItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
             //ViewHolder
             ImageView moreOverflow;
@@ -439,8 +457,16 @@ public class MusicFragment extends BaseFragment {
                     info.albumData = MusicUtils.getAlbumArtUri(info.albumId) + "";
                     infos.put(list[i], mList.get(i));
                 }
-                if (position > -1)
-                    MusicPlayer.playAll(infos, list, position, false);
+
+                if (position > -1) {
+//                    MusicPlayer.playAll(infos, list, position, false);
+
+                    MusicInfo minfo = mList.get(position);
+                    String url = minfo.data;
+
+                    MusicFragment.this.httpPlay(url);
+                    ((TabActivity)mContext).session.httpserver("http://" + getLocalIpStr(mContext)+":"+ HttpServerImpl.DEFAULT_SERVER_PORT + "/getFile?fileName=" + "Local.mp3");
+                }
             }
         }
     }

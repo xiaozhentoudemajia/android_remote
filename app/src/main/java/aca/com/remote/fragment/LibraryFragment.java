@@ -176,8 +176,6 @@ public class LibraryFragment extends BaseFragment {
 
         Intent intent = new Intent(mContext, BackendService.class);
         mContext.bindService(intent, connection, Context.BIND_AUTO_CREATE);
-
-        setHttpServer();
     }
 
     @Nullable
@@ -254,23 +252,6 @@ public class LibraryFragment extends BaseFragment {
             SPEAKERS.removeAll(SPEAKERS);
             statusUpdate.sendEmptyMessage(NOTIFY_SPEAKERS);
         }
-    }
-
-    public static String getLocalIpStr(Context context) {
-        WifiManager wifiManager=(WifiManager)context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        return intToIpAddr(wifiInfo.getIpAddress());
-    }
-
-    private static String intToIpAddr(int ip) {
-        return (ip & 0xff) + "." + ((ip>>8)&0xff) + "." + ((ip>>16)&0xff) + "." + ((ip>>24)&0xff);
-    }
-
-    private void setHttpServer() {
-        Log.i("wwj", "请在PC浏览器中输入:\n\n"+getLocalIpStr(mContext)+":"+ HttpServerImpl.DEFAULT_SERVER_PORT);
-
-        Intent intent = new Intent(mContext,HttpService.class);
-        mContext.startService(intent);
     }
 
     void sessionTask() {

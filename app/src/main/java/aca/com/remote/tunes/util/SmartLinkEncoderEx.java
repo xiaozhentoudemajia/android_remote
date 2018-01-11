@@ -88,6 +88,7 @@ public class SmartLinkEncoderEx {
                 addIp(mPkg, i, ip);
                 i += 4;
 
+                bEvenMask = (i%2 == 0)?"170":"85";
                 bDataMask = String.valueOf(33);
                 mPkg[i] = "239" +"." + i + "." +bEvenMask+"."+bDataMask;
                 Log.i("wwj", "data "+i+": "+mPkg[i]);

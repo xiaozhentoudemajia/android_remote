@@ -40,7 +40,7 @@ import aca.com.remote.R;
 import aca.com.remote.activity.SearchLibraryActivity;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.SessionWrapper;
-import aca.com.remote.activity.SmartLinkActivity;
+import aca.com.remote.activity.SmartLinkExActivity;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.tunes.daap.Speaker;
 import aca.com.remote.tunes.daap.Status;
@@ -196,7 +196,7 @@ public class LibraryFragment extends BaseFragment {
         wps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(mContext, SmartLinkActivity.class);
+                Intent intent = new Intent(mContext, SmartLinkExActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }

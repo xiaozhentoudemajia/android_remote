@@ -40,7 +40,7 @@ import aca.com.remote.R;
 import aca.com.remote.activity.SearchLibraryActivity;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.SessionWrapper;
-import aca.com.remote.activity.SmartLinkExActivity;
+import aca.com.remote.activity.SmartLinkActivity;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.tunes.daap.Speaker;
 import aca.com.remote.tunes.daap.Status;
@@ -197,7 +197,7 @@ public class LibraryFragment extends BaseFragment {
         wps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(mContext, SmartLinkExActivity.class);
+                Intent intent = new Intent(mContext, SmartLinkActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -426,7 +426,6 @@ public class LibraryFragment extends BaseFragment {
                 nameTextview.setText(speaker.getName());
                 speakerTypeTextView.setText(speaker.isLocalSpeaker() ? R.string.speakers_dialog_computer_speaker
                         : R.string.speakers_dialog_airport_express);
-                activeCheckBox.setChecked(speaker.isActive());
                 activeCheckBox.setOnClickListener(new View.OnClickListener() {
 
                     public void onClick(View v) {
@@ -456,6 +455,10 @@ public class LibraryFragment extends BaseFragment {
                 if (speaker.getName().contains(curHostLibrary)) {
                     mHostSpeaker = speaker;
                     activeCheckBox.setClickable(false);
+                    activeCheckBox.setChecked(true);
+                    setSpeakerActive(true, speaker);
+                } else {
+                    activeCheckBox.setChecked(speaker.isActive());
                 }
                 // If the speaker is active, enable the volume bar
                 if (speaker.isActive()) {

@@ -74,6 +74,7 @@ public class LibraryFragment extends BaseFragment {
     public final static long CACHE_TIME = 10000;
     public final static int tryCnt = 10;
     private Timer mTimer = new Timer();
+    private Speaker mHostSpeaker;
 
     public ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -429,23 +430,33 @@ public class LibraryFragment extends BaseFragment {
                 activeCheckBox.setOnClickListener(new View.OnClickListener() {
 
                     public void onClick(View v) {
-                        setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        if (mHostSpeaker != speaker) {
+                            setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        }
                     }
                 });
                 nameTextview.setOnClickListener(new View.OnClickListener() {
 
                     public void onClick(View v) {
-                        activeCheckBox.toggle();
-                        setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        if (mHostSpeaker != speaker) {
+                            activeCheckBox.toggle();
+                            setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        }
                     }
                 });
                 speakerTypeTextView.setOnClickListener(new View.OnClickListener() {
 
                     public void onClick(View v) {
-                        activeCheckBox.toggle();
-                        setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        if (mHostSpeaker != speaker) {
+                            activeCheckBox.toggle();
+                            setSpeakerActive(activeCheckBox.isChecked(), speaker);
+                        }
                     }
                 });
+                if (speaker.getName().contains(curHostLibrary)) {
+                    mHostSpeaker = speaker;
+                    activeCheckBox.setClickable(false);
+                }
                 // If the speaker is active, enable the volume bar
                 if (speaker.isActive()) {
                     volumeBar.setEnabled(true);
@@ -457,7 +468,6 @@ public class LibraryFragment extends BaseFragment {
                 }
 
                 setChannel.setOnClickListener(new SetChannelListener(speaker));
-                Speaker spk = SPEAKERS.get(position);
                 return row;
             } catch (RuntimeException e) {
                 Log.e(TAG, "Error when rendering speaker item: ", e);

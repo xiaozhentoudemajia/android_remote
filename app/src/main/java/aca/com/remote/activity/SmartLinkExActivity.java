@@ -38,6 +38,8 @@ public class SmartLinkExActivity extends AppCompatActivity {
     private EditText mSSIDEditText;
     private EditText mPasswordEditText;
     private int mIp;
+    private SmartLinkTask mTask;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,7 +97,22 @@ public class SmartLinkExActivity extends AppCompatActivity {
             return;
         }
 
-        new SmartLinkTask(this, new SmartLinkEncoderEx(ssid, password, mIp)).execute();
+        mTask = new SmartLinkTask(this, new SmartLinkEncoderEx(ssid, password, mIp));
+        mTask.execute();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mTask != null) {
+            mTask.cancel(true);
+            mTask = null;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -175,7 +192,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
             }).start();
         }
 
-        private void sendPacketAndSleep_bak(int length) {
+        private void sendPacketAndSleep(int length) {
             try {
                 /*
                 DatagramPacket pkg = new DatagramPacket(DUMMY_DATA,
@@ -195,29 +212,14 @@ public class SmartLinkExActivity extends AppCompatActivity {
             }
         }
 
-        private void sendPacketAndSleep(int length) {
-            try {
-                /*
-                DatagramPacket pkg = new DatagramPacket(DUMMY_DATA,
-                        length,
-                        InetAddress.getByName("239.0.0.27"),
-                        PORT);
-                        */
-                DatagramPacket pkg = new DatagramPacket(DUMMY_DATA,
-                        length,
-                        group,
-                        30001);
-                mSocket.send(pkg);
-                Thread.sleep(4);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
         @Override
         protected Void doInBackground(Void... params) {
 
             for (int d = 0; d < 300; ++d) {
+                if (isCancelled()) {
+                    break;
+                }
+
                 try {
 
 //                mSocket = new DatagramSocket();
@@ -225,7 +227,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
 //                mSocket.setBroadcast(true);
                     group = InetAddress.getByName("239.0.0.0");
                     mSocket.joinGroup(group);
-                    sendPacketAndSleep_bak(4);
+                    sendPacketAndSleep(4);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -245,7 +247,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    sendPacketAndSleep_bak(4);
+                    sendPacketAndSleep(4);
                 }
 
                 if (d % 200 == 0) {

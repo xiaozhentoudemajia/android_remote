@@ -40,7 +40,7 @@ import aca.com.remote.R;
 import aca.com.remote.activity.SearchLibraryActivity;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.SessionWrapper;
-import aca.com.remote.activity.SmartLinkActivity;
+import aca.com.remote.activity.SmartLinkExActivity;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.tunes.daap.Speaker;
 import aca.com.remote.tunes.daap.Status;
@@ -197,7 +197,7 @@ public class LibraryFragment extends BaseFragment {
         wps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(mContext, SmartLinkActivity.class);
+                Intent intent = new Intent(mContext, SmartLinkExActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -237,7 +237,12 @@ public class LibraryFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
-        statusUpdate.sendEmptyMessage(CHECK_STATUS);
+
+        if (backendService != null) {
+            if (curHostLibrary != backendService.getCurHostLibrary()) {
+                statusUpdate.sendEmptyMessage(CHECK_STATUS);
+            }
+        }
     }
 
     @Override
@@ -456,7 +461,9 @@ public class LibraryFragment extends BaseFragment {
                     mHostSpeaker = speaker;
                     activeCheckBox.setClickable(false);
                     activeCheckBox.setChecked(true);
-                    setSpeakerActive(true, speaker);
+                    if (speaker.isActive() != true) {
+                        setSpeakerActive(true, speaker);
+                    }
                 } else {
                     activeCheckBox.setChecked(speaker.isActive());
                 }

@@ -31,6 +31,7 @@ import android.os.Process;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -170,6 +171,89 @@ public class RequestHelper {
       return os.toByteArray();
 
    }
+   
+   /**
+     * Performs the HTTP request and gathers the response from the server. The
+     * gzip and deflate headers are sent in case the server can respond with
+     * compressed answers saving network bandwidth and speeding up responses.
+     * <p>
+     * @param remoteUrl the HTTP URL to connect to
+     * @param data the data to send
+     * @param keepalive true if keepalive false if not
+     * @return a byte array containing the HTTPResponse
+     * @throws Exception if any error occurs
+     */
+    public static byte[] request(String remoteUrl, String data, boolean keepalive) throws Exception {
+        Log.d(TAG, String.format("started request(remote=%s)", remoteUrl));
+        Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+
+        byte[] buffer = new byte[1024];
+        DataOutputStream dos;
+
+        URL url = new URL(remoteUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setAllowUserInteraction(false);
+        connection.setRequestProperty("User-agent","acacontrol");
+        connection.setRequestProperty("Viewer-Only-Client", "1");
+        connection.setRequestProperty("Client-Daap-Version", "3.10");
+        // allow both GZip and Deflate (ZLib) encodings
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+
+        if (null != data) {
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+        }
+
+        if (!keepalive) {
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+        } else {
+            connection.setReadTimeout(0);
+        }
+        connection.connect();
+        if (null != data) {
+            dos = new DataOutputStream(connection.getOutputStream());
+            dos.write(data.getBytes());
+            dos.flush();
+            dos.close();
+        }
+
+        if (connection.getResponseCode() >= HttpURLConnection.HTTP_UNAUTHORIZED)
+            throw new Exception("HTTP Error Response Code: " + connection.getResponseCode());
+
+        // obtain the encoding returned by the server
+        String encoding = connection.getContentEncoding();
+
+        InputStream inputStream = null;
+
+        // create the appropriate stream wrapper based on the encoding type
+        if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
+            inputStream = new GZIPInputStream(connection.getInputStream());
+        } else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
+            inputStream = new InflaterInputStream(connection.getInputStream(), new Inflater(true));
+        } else {
+            inputStream = connection.getInputStream();
+        }
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+        } finally {
+            if (os != null) {
+                os.flush();
+                os.close();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+        Log.i("gavin",connection.getResponseMessage());
+        return os.toByteArray();
+
+    }
 
    public static byte[] request(String remoteUrl, boolean keepalive, ConnectionResponseListener listener) throws Exception {
       Log.d(TAG, String.format("started request(remote=%s)", remoteUrl));

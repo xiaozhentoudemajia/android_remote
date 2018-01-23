@@ -62,6 +62,9 @@
             android:name=".activity.ShoutcastActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".activity.TuneInActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".activity.LibraryMusicActitvity"
             android:screenOrientation="portrait" />
         <activity

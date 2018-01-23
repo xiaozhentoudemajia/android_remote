@@ -412,6 +412,31 @@ public class Library {
       }
    }
 
+    public void setRadioTunesUrl(String url) {
+        Log.d(TAG, " in setRadioTunesUrl");
+        if (null == url || url.isEmpty())
+            return;
+        try {
+            String data = null;
+            if (url.contains("?")) {
+                //url contain parameter, transfer parameter by payload
+                data = url.substring(url.indexOf("?"));
+                url = url.substring(0, url.indexOf("?"));
+            }
+            RequestHelper.request(String.format("%s/ctrl-int/1/seturl?url=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
+                            session.getRequestBase(), url, session.sessionId), data, false);
+        } catch (Exception e) {
+            String errStr = e.getMessage();
+            if((null != errStr) && errStr.contains("HTTP Error Response Code")){
+                if(null != errorListener){
+                    String[] splits = errStr.split(":");
+                    errorListener.onActionError(Integer.parseInt(splits[1].trim()));
+                }
+            }
+            Log.w(TAG, "setRadioTunesUrl Exception:" + e.getMessage());
+        }
+    }
+
    /**
     * URL encode a string escaping single quotes first.
     * <p>

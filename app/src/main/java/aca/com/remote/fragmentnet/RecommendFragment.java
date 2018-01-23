@@ -41,6 +41,7 @@ import aca.com.remote.activity.MainActivity;
 import aca.com.remote.activity.PlaylistActivity;
 //import com.wm.remusic.activity.RadioDetailActivity;
 import aca.com.remote.activity.ShoutcastActivity;
+import aca.com.remote.activity.TuneInActivity;
 import aca.com.remote.fragment.AttachFragment;
 import aca.com.remote.json.RecommendListNewAlbumInfo;
 import aca.com.remote.json.RecommendListRadioInfo;
@@ -137,6 +138,17 @@ public class RecommendFragment extends AttachFragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(mContext, ShoutcastActivity.class);
+                intent.putExtra(Constants.EXTRA_ADDRESS, getCurHost());
+                intent.putExtra(Constants.EXTRA_LIBRARY, getCurHostLibary());
+                mContext.startActivity(intent);
+            }
+        });
+
+        btn = mRecommendView.findViewById(R.id.private_tunein);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(mContext, TuneInActivity.class);
                 intent.putExtra(Constants.EXTRA_ADDRESS, getCurHost());
                 intent.putExtra(Constants.EXTRA_LIBRARY, getCurHostLibary());
                 mContext.startActivity(intent);

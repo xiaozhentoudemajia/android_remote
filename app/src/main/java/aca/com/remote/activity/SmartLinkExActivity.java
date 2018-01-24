@@ -39,6 +39,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
     private EditText mPasswordEditText;
     private int mIp;
     private SmartLinkTask mTask;
+    private static final String WIFI_CONNECTED = "wificonnected";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -169,7 +170,18 @@ public class SmartLinkExActivity extends AppCompatActivity {
                             try {
                                 udpServerSocket.receive(packet);
                                 byte receivedData[] = packet.getData();
+                                byte[] replyByte = new byte[packet.getLength()];
+                                System.arraycopy(receivedData, 0, replyByte, 0, packet.getLength());
+                                String replayStr = new String(replyByte);
+                                Log.i("wwj", "new string :"+ replayStr);
+
+                                if (replayStr.contains(WIFI_CONNECTED)) {
+                                    mDone = true;
+                                    break;
+                                }
+
                                 for (byte b : receivedData) {
+                                    //Log.i("wwj", "receivedData :"+ b);
                                     if (b == mRandomChar)
                                         replyByteCounter++;
                                 }
@@ -239,7 +251,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
                     try {
 
 //                mSocket = new DatagramSocket();
-                        Log.i("wwj", "sendPacketAndSleep_bak : " + pkg[i]);
+                        Log.d("wwj", "sendPacketAndSleep : " + pkg[i]);
                         mSocket = new MulticastSocket(30001);
 //                mSocket.setBroadcast(true);
                         group = InetAddress.getByName(pkg[i]);
@@ -250,9 +262,8 @@ public class SmartLinkExActivity extends AppCompatActivity {
                     sendPacketAndSleep(4);
                 }
 
-                if (d % 200 == 0) {
-                    if (isCancelled() || mDone)
-                        return null;
+                if (mDone) {
+                    return null;
                 }
             }
             return null;

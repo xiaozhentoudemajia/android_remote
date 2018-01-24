@@ -68,7 +68,10 @@ public class SmartLinkExActivity extends AppCompatActivity {
 
         mSSIDEditText = (EditText)findViewById(R.id.ssidEditText);
         mPasswordEditText = (EditText)findViewById(R.id.passwordEditText);
+        updateSsid();
+    }
 
+    private void updateSsid() {
         Context context = getApplicationContext();
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -109,6 +112,12 @@ public class SmartLinkExActivity extends AppCompatActivity {
             mTask.cancel(true);
             mTask = null;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateSsid();
     }
 
     @Override

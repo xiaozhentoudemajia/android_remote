@@ -86,6 +86,7 @@ public class Status {
 	private long revision = 1;
 	public static String lastActivity, lastPlaylistId, lastPlaylistPersistentId;
 	public static String[] lastAlbum;
+	public static String currentMusicService;
 
 	// This is used to fetch higher quality covers on high DPI devices
 	// Has to be initialised in ControlActivity
@@ -142,11 +143,13 @@ public class Status {
 					if (update != null)
 						update.sendEmptyMessage(UPDATE_PROGRESS);
 
-					// trigger a forced update if we seem to gone past end of
-					// song
-					if (progressRemain <= 0) {
-						Log.d(TAG, "suggesting that we fetch new song");
-						fetchUpdate();
+					if (currentMusicService.contains("SHOUTcast") != true) {
+						// trigger a forced update if we seem to gone past end of
+						// song
+						if (progressRemain <= 0) {
+							Log.d(TAG, "suggesting that we fetch new song");
+							fetchUpdate();
+						}
 					}
 				}
 
@@ -264,6 +267,7 @@ public class Status {
 		boolean visualizer = (resp.getNumberLong("cavs") > 0);
 		boolean fullscreen = (resp.getNumberLong("cafs") > 0);
 		boolean geniusSelectable = resp.containsKey("ceGS");
+		currentMusicService = resp.getString("srvc");
 
 		// update state if changed
 		if (playStatus != this.playStatus || shuffleStatus != this.shuffleStatus || repeatStatus != this.repeatStatus
@@ -510,7 +514,6 @@ public class Status {
 
 	private void setChannel(long speakerId, int channel) throws Exception {
 		String url;
-		Log.i("wwj", "set channel :  "+channel);
 		url = String.format("%s/ctrl-int/1/setproperty?dmcp.channel=%d&include-speaker-id=%s" + "&session-id=%s",
 				session.getRequestBase(), channel, speakerId, session.sessionId);
 		RequestHelper.request(url, false);

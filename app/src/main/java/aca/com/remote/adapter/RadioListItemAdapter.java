@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import aca.com.remote.R;
+import aca.com.remote.tunes.util.ShoutCastRadioGenre;
+import aca.com.remote.tunes.util.ShoutCastRadioStation;
 import aca.com.remote.tunes.util.TuneInElement;
 import aca.com.remote.tunes.util.TuneInLink;
 
@@ -116,12 +118,33 @@ public class RadioListItemAdapter extends BaseAdapter {
                 ((ImageView)convertView.findViewById(R.id.radio_list_item_type)).setImageResource(R.drawable.radio_icon);
 
             }
+        } else if (o instanceof ShoutCastRadioGenre) {
+            ((TextView)convertView.findViewById(R.id.radio_list_item_text)).setText(((ShoutCastRadioGenre)mItems.get(position)).getName());
+            ((ImageView)convertView.findViewById(R.id.radio_list_item_image)).setImageResource(R.drawable.radio_link);
+            ((ImageView)convertView.findViewById(R.id.radio_list_item_type)).setImageDrawable(null);
+        } else if (o instanceof ShoutCastRadioStation) {
+            ((TextView)convertView.findViewById(R.id.radio_list_item_text)).setText(((ShoutCastRadioStation)mItems.get(position)).getName());
+            ((ImageView)convertView.findViewById(R.id.radio_list_item_type)).setImageResource(R.drawable.radio_icon);
+            if (!this.iconMap.containsKey(((ShoutCastRadioStation) o).getLogo())) {
+                //no contain, set to default, and start to download
+                ((ImageView)convertView.findViewById(R.id.radio_list_item_image)).setImageResource(R.drawable.radio_station);
+                iconMap.put(((ShoutCastRadioStation) o).getLogo(), null);//set to null, means downloading
+//                getHttpBitmap(((ShoutCastRadioStation) o).getLogo());
+            } else {
+                String url = ((ShoutCastRadioStation) o).getLogo();
+                if (null != iconMap.get(url))
+                    ((ImageView)convertView.findViewById(R.id.radio_list_item_image)).setImageBitmap(iconMap.get(url));
+                else//image is downloading, so set to default
+                    ((ImageView)convertView.findViewById(R.id.radio_list_item_image)).setImageResource(R.drawable.radio_station);
+            }
         }
 
         return convertView;
     }
 
     public void getHttpBitmap(final String url) {
+        if (null == url)
+            return;
         new Thread(new Runnable() {
             @Override
             public void run() {

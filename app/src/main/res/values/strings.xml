@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <string name="version">ver1.2.4</string>
+    <string name="version">ver1.2.5</string>
     <string name="local_music">Local Music</string>
     <string name="recent_play">Recent</string>
     <string name="local_manage">Download</string>
@@ -165,4 +165,8 @@
     <string name="select_library">Please Select Device First....</string>
     <string name="thirdparty">Support Following APP: </string>
     <string name="library_music">Play Device Music: </string>
+    <string name="shoutcast_top_20_station">Top 20 Station</string>
+    <string name="shoutcast_genre">Genre</string>
+    <string name="shoutcast_country_location">Country/Location</string>
+    <string name="error_no_speaker_selected">No speaker selected!!</string>
 </resources>

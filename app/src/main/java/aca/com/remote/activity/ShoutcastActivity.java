@@ -1,5 +1,8 @@
 package aca.com.remote.activity;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,34 +20,44 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import aca.com.remote.fragment.RadioListFragment;
+import aca.com.remote.fragmentnet.RankingFragment;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.daap.Library;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.R;
+import aca.com.remote.tunes.util.RadioRequestCallback;
+import aca.com.remote.tunes.util.ShoutCastRadioGenre;
+import aca.com.remote.tunes.util.ShoutCastRadioStation;
+import aca.com.remote.tunes.util.ShoutCastRequest;
 import aca.com.remote.uitl.CommonUtils;
 
 /**
  * Created by Administrator on 2017/6/27.
  */
 
-public class ShoutcastActivity extends BaseActivity implements View.OnClickListener {
+public class ShoutcastActivity extends BaseActivity {
     public static final String TAG = ShoutcastActivity.class.toString();
 
     private WebView shoutcast_webview;
     private ProgressBar shoutcast_loading_bar;
-    //private Button shoutcast_btn_back;
-    //private Button shoutcast_btn_top;
-    //private Button shoutcast_btn_refresh;
-    //private TextView shoutcast_txt_title;
     private long exitTime;
     private ActionBar ab;
+    private ShoutCastRequest mShoutCast;
+    private String tune_base = null;
+
+    private List<Fragment> listFragments = new ArrayList<>();
 
     private BackendService backend;
     private Session session;
-    private  Library library;
+    private Library library = null;
 
     public ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -72,43 +85,46 @@ public class ShoutcastActivity extends BaseActivity implements View.OnClickListe
         }
     };
 
-    @Override
-    public void onStart(){
-        super.onStart();
-        this.bindService(new Intent(this, BackendService.class), connection,
-                Context.BIND_AUTO_CREATE);
-    }
+    private AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Object o = ((RadioListFragment)listFragments.get(listFragments.size() - 1)).getList().get(position);
+            RadioListFragment fg;
 
-    @Override
-    public void onStop(){
-        super.onStop();
-        this.unbindService(connection);
-    }
+            if (o instanceof ShoutCastRadioGenre) {
+                fg = new RadioListFragment();
+                String name = ((ShoutCastRadioGenre)o).getName();
+                Bundle bundle = new Bundle();
+                bundle.putString("title", name);
+                fg.setArguments(bundle);
+                addFragment(fg, "Fragment_"+listFragments.size());
+                ((RadioListFragment)listFragments.get(listFragments.size() - 1)).setOnItemClickListener(itemClickListener);
+                if (name.equals(getString(R.string.shoutcast_top_20_station))) {
+                    mShoutCast.getTop500Stations(20, 0, null);
+                } else if (name.equals(getString(R.string.shoutcast_genre))) {
+                    mShoutCast.getPrimaryGenre();
+                } else {
+                    if (((ShoutCastRadioGenre) o).getHasChildren())
+                        mShoutCast.getSecondGenre(((ShoutCastRadioGenre) o).getId());
+                    else
+                        mShoutCast.getStationsByBitrateOrCodecTypeOrGenreID(
+                                0, null, ((ShoutCastRadioGenre) o).getId(), 0, null);
+                }
+            } else if (o instanceof ShoutCastRadioStation) {
+                /** station tune**/
+                if (null != tune_base)
+                    mShoutCast.tuneIntoStation(tune_base, ((ShoutCastRadioStation) o).getId());
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shoutcast);
 
-        this.initWebView();
-    }
-
-    private void initWebView() {
-        shoutcast_webview = (WebView)findViewById(R.id.shoutcast_webview);
-        shoutcast_loading_bar = (ProgressBar)findViewById(R.id.shoutcast_loading_bar);
-        //shoutcast_btn_back = (Button)findViewById(R.id.shoutcast_btn_back);
-        //shoutcast_btn_top = (Button)findViewById(R.id.shoutcast_btn_top);
-        //shoutcast_btn_refresh = (Button)findViewById(R.id.shoutcast_btn_refresh);
-        //shoutcast_txt_title = (TextView)findViewById(R.id.shoutcast_txt_title);
-
-        WebSettings shoutcast_webSettings = shoutcast_webview.getSettings();
-        shoutcast_webSettings.setJavaScriptEnabled(true);
-
-        shoutcast_webview.setWebViewClient(new shoutcastWebViewClient());
-        shoutcast_webview.setWebChromeClient(new shoutcastWebChromeClient());
-        shoutcast_webview.loadUrl("http://www.shoutcast.com/");
-
-
+        /** init view **/
+        //action back
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ((AppCompatActivity) this).setSupportActionBar(toolbar);
         toolbar.setPadding(0, CommonUtils.getStatusHeight(this), 0, 0);
@@ -122,41 +138,141 @@ public class ShoutcastActivity extends BaseActivity implements View.OnClickListe
                 onBackPressed();
             }
         });
-        //shoutcast_btn_back.setOnClickListener(this);
-        //shoutcast_btn_top.setOnClickListener(this);
-        //shoutcast_btn_refresh.setOnClickListener(this);
+
+        RadioListFragment fg = new RadioListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("title", "ShoutCast");
+        fg.setArguments(bundle);
+        fg.setOnItemClickListener(itemClickListener);
+        addFragment(fg, "" + listFragments.size());
+
+        mShoutCast = new ShoutCastRequest(null);
+        mShoutCast.setShoutCastCallback(new RadioRequestCallback() {
+            @Override
+            public void messageCallback(int type, Object obj) {
+                switch (type) {
+                    case ShoutCastRequest.eSHOUTCAST_MSG_STATUS_CODE:
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_STATUS_TEXT:
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_GENRE:
+                        if (!listFragments.isEmpty()) {
+                            RadioListFragment fg = (RadioListFragment)listFragments.get(listFragments.size()-1);
+                            if (!fg.getXmlLoadStatus())
+                                fg.addItem(obj);
+                        }
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_STATION:
+                        if (!listFragments.isEmpty()) {
+                            RadioListFragment fg = (RadioListFragment)listFragments.get(listFragments.size()-1);
+                            if (!fg.getXmlLoadStatus())
+                                fg.addItem(obj);
+                        }
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_TUNE_BASE:
+                        tune_base = obj.toString();
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_URL:
+                        final String str = obj.toString();
+                        if (null == library) {
+                            Toast.makeText(ShoutcastActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (null != library) {
+                                    library.setRadioTunesUrl(str);
+                                }
+                            }
+                        }).start();
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_XML_PARSER_START:
+                        /** no need to set status to false, because status will be set to false when
+                         * constructed. avoid parent fragment status change to false when changing
+                         * from child fragment to parent fragment quickly**/
+                        break;
+                    case ShoutCastRequest.eSHOUTCAST_MSG_XML_PARSER_END:
+                        if (!listFragments.isEmpty())
+                            ((RadioListFragment)listFragments.get(listFragments.size()-1)).setXmlLoadStatus(true);
+                        break;
+                    default:
+                        Log.e(TAG, "Un-know msg type!!!");
+                }
+            }
+        });
     }
 
     @Override
-    public void onClick(View v) {
-        /*
-        switch (v.getId()) {
-            case R.id.shoutcast_btn_back:
-                onBackPressed();
-                break;
-            case R.id.shoutcast_btn_top:
-                this.shoutcast_webview.setScaleY(0);
-                break;
-            case R.id.shoutcast_btn_refresh:
-                shoutcast_webview.reload();
-                break;
+    public void onStart(){
+        super.onStart();
+        this.bindService(new Intent(this, BackendService.class), connection,
+                Context.BIND_AUTO_CREATE);
+        RadioListFragment fg = (RadioListFragment) listFragments.get(0);
+        if (!fg.getXmlLoadStatus()) {
+            fg.addItem(new ShoutCastRadioGenre(getString(R.string.shoutcast_top_20_station), -1, -1, false));
+            fg.addItem(new ShoutCastRadioGenre(getString(R.string.shoutcast_genre), -1, -1, false));
+//            fg.addItem(new ShoutCastRadioGenre(getString(R.string.shoutcast_country_location), -1, -1, false));
+            fg.setXmlLoadStatus(true);
         }
-        */
+    }
+
+    @Override
+    public void onStop(){
+        super.onStop();
+        this.unbindService(connection);
+    }
+
+    private void addFragment(Fragment fragment, String tag) {
+        FragmentManager manager = getFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        if (!listFragments.isEmpty())
+            transaction.hide(listFragments.get(listFragments.size()-1));
+        transaction.add(R.id.radio_list_container, fragment, tag);
+        listFragments.add(fragment);
+        transaction.addToBackStack(tag);
+        transaction.commit();
+    }
+
+    private void removeFragment() {
+        FragmentManager manager = getFragmentManager();
+        manager.popBackStack();
+        if (!listFragments.isEmpty())
+            listFragments.remove(listFragments.size()-1);
+    }
+
+    private void initWebView() {
+//        shoutcast_webview = (WebView)findViewById(R.id.shoutcast_webview);
+//        shoutcast_loading_bar = (ProgressBar)findViewById(R.id.shoutcast_loading_bar);
+//
+//        WebSettings shoutcast_webSettings = shoutcast_webview.getSettings();
+//        shoutcast_webSettings.setJavaScriptEnabled(true);
+//
+//        shoutcast_webview.setWebViewClient(new shoutcastWebViewClient());
+//        shoutcast_webview.setWebChromeClient(new shoutcastWebChromeClient());
+//        shoutcast_webview.loadUrl("http://www.shoutcast.com/");
+//
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        ((AppCompatActivity) this).setSupportActionBar(toolbar);
+//        toolbar.setPadding(0, CommonUtils.getStatusHeight(this), 0, 0);
+//
+//        ab = ((AppCompatActivity) this).getSupportActionBar();
+//        ab.setHomeAsUpIndicator(R.drawable.actionbar_back);
+//        ab.setDisplayHomeAsUpEnabled(true);
+//        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                onBackPressed();
+//            }
+//        });
     }
 
     @Override
     public void onBackPressed() {
-        if (shoutcast_webview.canGoBack()) {
-            shoutcast_webview.goBack();
-        } else {
-            if ((System.currentTimeMillis()-exitTime) > 2000 ) {
-                Toast.makeText(getApplicationContext(), "Press back again to exit",
-                        Toast.LENGTH_SHORT).show();
-                exitTime = System.currentTimeMillis();
-            } else {
-                finish();
-            }
-        }
+        if (listFragments.size() > 1) {
+            removeFragment();
+        } else
+            super.onBackPressed();
     }
 
     private class shoutcastWebViewClient extends WebViewClient {

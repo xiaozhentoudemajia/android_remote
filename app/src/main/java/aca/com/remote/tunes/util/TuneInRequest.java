@@ -17,6 +17,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -143,14 +144,15 @@ public class TuneInRequest {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
 
-            StringBuffer response = (StringBuffer) msg.obj;
+            String response = null;
 
             switch (msg.what) {
                 case TUNEIN_RESPONSE_XML:
+                    response = msg.obj.toString();
                     try {
                         factory = XmlPullParserFactory.newInstance();
                         parser = factory.newPullParser();
-                        parser.setInput(new ByteArrayInputStream(response.toString().getBytes()), "UTF-8");
+                        parser.setInput(new ByteArrayInputStream(response.getBytes()), "UTF-8");
 
                         String tag;
                         String element_type;
@@ -432,10 +434,15 @@ public class TuneInRequest {
                     URL con_url = new URL(url);
                     httpConn = (HttpURLConnection)con_url.openConnection();
                     httpConn.setRequestMethod("GET");
-                    httpConn.setDoOutput(true);
                     httpConn.setDoInput(true);
                     httpConn.setUseCaches(false);
                     httpConn.setRequestProperty("Connection", "Keep-Alive");
+                    httpConn.setRequestProperty("User-Agent",
+                            "Mozilla/5.0 (Windows; U; Windows NT 5.1; " + Locale.getDefault()
+                                    + "; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3");
+                    String language = Locale.getDefault().getLanguage();
+                    if (null != language && !language.isEmpty())
+                        httpConn.setRequestProperty("Accept-Language", language);
 
                     //get response
                     int responseCode = httpConn.getResponseCode();

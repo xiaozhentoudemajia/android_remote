@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/bleh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -29,29 +27,22 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toLeftOf="@+id/bar_search"
-                android:text="Libary music...."
+                android:text="ShoutCast"
                 android:textColor="@color/white_text"
                 android:textSize="20sp" />
         </RelativeLayout>
     </aca.com.magicasakura.widgets.TintToolbar>
 
-    <WebView
-        android:id="@+id/shoutcast_webview"
-        android:layout_width="fill_parent"
-        android:layout_height="match_parent"></WebView>
-
-    <ProgressBar
-        android:id="@+id/shoutcast_loading_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:visibility="gone"
-        style="?android:attr/progressBarStyleLarge"/>
+    <FrameLayout
+        android:id="@+id/radio_list_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:layout_above="@id/bottom_container"/>
 
     <FrameLayout
         android:layout_alignParentBottom="true"
         android:id="@+id/bottom_container"
         android:layout_width="match_parent"
         android:layout_height="50dp" />
-</LinearLayout>
+</RelativeLayout>

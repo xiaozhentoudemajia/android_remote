@@ -106,7 +106,7 @@ public class TuneInActivity extends BaseActivity {
         setContentView(R.layout.activity_tunein);
 
         /** init view **/
-        //cation back
+        //action back
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ((AppCompatActivity) this).setSupportActionBar(toolbar);
         toolbar.setPadding(0, CommonUtils.getStatusHeight(this), 0, 0);
@@ -145,7 +145,8 @@ public class TuneInActivity extends BaseActivity {
             public void messageCallback(int type, Object obj) {
                 switch (type) {
                     case TuneInRequest.eTUNEIN_MSG_LINK:
-                        if (((TuneInLink)obj).getText().equalsIgnoreCase("Settings"))
+						String key = ((TuneInLink)obj).getKey();
+                        if (null != key && key.equalsIgnoreCase("Settings"))
                             break;
                         if (!listFragments.isEmpty()) {
                             RadioListFragment fg = (RadioListFragment)listFragments.get(listFragments.size()-1);
@@ -163,7 +164,11 @@ public class TuneInActivity extends BaseActivity {
                         }
                         break;
                     case TuneInRequest.eTUNEIN_MSG_URL:
-                        final String str = (String)obj;
+                        final String str = obj.toString();
+                        if (null == library) {
+                            Toast.makeText(TuneInActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
+                            break;
+                        }
                         new Thread(new Runnable() {
                             @Override
                             public void run() {

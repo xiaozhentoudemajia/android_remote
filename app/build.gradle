@@ -38,6 +38,8 @@ dependencies {
     //    compile 'com.readystatesoftware.systembartint:systembartint:1.0.3'
     compile 'com.github.ksoichiro:android-observablescrollview:1.6.0'
     compile 'com.github.promeg:tinypinyin:1.0.0'
+    compile 'org.apache.commons.io:commonsIO:2.5.0'
+    compile 'org.apache.ant:ant:1.9.7'
     compile files('libs/activation.jar')
     compile files('libs/additionnal.jar')
     compile files('libs/mail.jar')

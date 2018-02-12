@@ -45,6 +45,7 @@ import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.tunes.daap.Speaker;
 import aca.com.remote.tunes.daap.Status;
 import aca.com.remote.tunes.util.ThreadExecutor;
+import aca.com.remote.upgrade.UpgradeTestActivity;
 
 /**
  * Created by ali_mac on 2017/11/15.
@@ -204,6 +205,16 @@ public class LibraryFragment extends BaseFragment {
         });
 
         curLibary = (Button) view.findViewById(R.id.cur_library);
+
+        Button upg = (Button) view.findViewById(R.id.upgrade);
+        upg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(mContext, UpgradeTestActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
+            }
+        });
 
         this.adapter = new SpeakersAdapter(mContext);
         this.list = (ListView) view.findViewById(android.R.id.list);

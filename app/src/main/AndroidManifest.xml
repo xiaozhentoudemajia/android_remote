@@ -102,6 +102,10 @@
         <activity
             android:name=".activity.TabActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".upgrade.UpgradeTestActivity"
+            android:screenOrientation="portrait"/>
+
         <activity android:name=".activity.DownActivity" android:screenOrientation="portrait"/>
         <activity android:name=".activity.PlaylistActivity" android:screenOrientation="portrait"/>
         <activity android:name=".activity.RecentActivity" android:screenOrientation="portrait"/>

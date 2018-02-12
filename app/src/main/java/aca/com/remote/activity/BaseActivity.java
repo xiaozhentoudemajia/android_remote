@@ -179,6 +179,11 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
             binder.setTransPath(url);
     }
 
+    public void setUpgPath(String path) {
+        if (binder != null)
+            binder.setUpgPath(path);
+    }
+
     public void setCurHost(String host) {
         mCurHost = host;
     }

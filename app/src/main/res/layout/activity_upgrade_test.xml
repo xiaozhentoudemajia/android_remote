@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/upgbuttons"
+        android:layout_margin="30dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/updateLocalPackage"
+            android:layout_width="144dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="10dp"
+            android:text="updateLocalPackage"
+            android:textSize="16dp"
+            />
+
+        <Button
+            android:id="@+id/updateFirmware"
+            android:layout_width="144dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="10dp"
+            android:text="updateFirmware"
+            android:textSize="16dp"
+            />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/upg_localversion"
+        android:textSize="16sp"
+        android:layout_below="@+id/upgbuttons"
+        android:layout_alignLeft="@+id/upgbuttons"
+        android:text="localversion:"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/upg_firmwareversion"
+        android:layout_below="@+id/upg_localversion"
+        android:layout_alignLeft="@+id/upgbuttons"
+        android:textSize="16sp"
+        android:text="firmwareversion:"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/upg_firmwareversion"
+        android:layout_alignLeft="@+id/upgbuttons"
+        android:scrollbars="vertical"
+        android:layout_marginBottom="80dp"
+        android:layout_marginRight="40dp"
+        android:fillViewport="true">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/upg_notify"
+            android:textSize="16sp"
+            android:background="@color/yellow"
+            android:text="upg_notify:"/>
+
+    </ScrollView>
+
+    <FrameLayout
+        android:layout_alignParentBottom="true"
+        android:id="@+id/bottom_container"
+        android:layout_width="match_parent"
+        android:layout_height="60dp" />
+</RelativeLayout>

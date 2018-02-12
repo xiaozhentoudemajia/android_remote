@@ -33,7 +33,9 @@ public class HttpServerImpl extends NanoHTTPD {
     private static final String REQUEST_TEST = "/test";
     private static final String REQUEST_ACTION_GET_FILE = "/getFile";
     private static final String REQUEST_ACTION_GET_FILE_LIST = "/getFileList";
+    private static final String REQUEST_UPGRADE_GET_FILE = "/upgrade";
     private String transPath;
+    private String upgPath;
 
     public HttpServerImpl() {
         super(DEFAULT_SERVER_PORT);
@@ -70,6 +72,23 @@ public class HttpServerImpl extends NanoHTTPD {
         			return responseFileStream(session,fileName);
         		}
         	}        	
+        } else if (REQUEST_UPGRADE_GET_FILE.equals(strUri)) {
+            Map<String,String> params = session.getParms();
+            String fileName;
+            for(String param : params.keySet()) {
+                fileName = upgPath + param;
+
+                Log.i(TAG,"fileName = " + fileName);
+
+                File file = new File(fileName);
+                if(file.exists()){
+                    if(file.isDirectory()){
+                        return responseFileList(session,fileName);
+                    }else{
+                        return responseFileStream(session,fileName);
+                    }
+                }
+            }
         }
         return response404(session);
     }
@@ -145,5 +164,10 @@ public class HttpServerImpl extends NanoHTTPD {
     public void setTransPath(String path){
         transPath = path;
         Log.i("wwj", "setTransPath to "+path);
+    }
+
+    public void setUpgPath(String path){
+        upgPath = path;
+        Log.i("wwj", "setUpgPath to "+path);
     }
 }

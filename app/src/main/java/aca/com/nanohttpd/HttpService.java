@@ -58,5 +58,9 @@ public class HttpService extends Service {
 		public void setTransPath(String data){
 			HttpService.this.mHttpServer.setTransPath(data);
 		}
+
+		public void setUpgPath(String data){
+			HttpService.this.mHttpServer.setUpgPath(data);
+		}
 	}
 }

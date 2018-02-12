@@ -24,9 +24,13 @@ import java.util.List;
 import aca.com.remote.R;
 import aca.com.remote.fragment.RadioListFragment;
 import aca.com.remote.tunes.BackendService;
+import aca.com.remote.tunes.SessionWrapper;
+import aca.com.remote.tunes.daap.ActionErrorListener;
 import aca.com.remote.tunes.daap.Library;
 import aca.com.remote.tunes.daap.Session;
+import aca.com.remote.tunes.util.Constants;
 import aca.com.remote.tunes.util.RadioRequestCallback;
+import aca.com.remote.tunes.util.ThreadExecutor;
 import aca.com.remote.tunes.util.TuneInElement;
 import aca.com.remote.tunes.util.TuneInLink;
 import aca.com.remote.tunes.util.TuneInRequest;
@@ -44,29 +48,76 @@ public class TuneInActivity extends BaseActivity {
 
     private List<Fragment> listFragments = new ArrayList<>();
 
+    public String curHost;
+    public String curHostLibrary;
     private BackendService backend;
-    private Session session;
-    private Library library = null;
-    private ServiceConnection conn = new ServiceConnection() {
+    public Session session;
+    private Library library;
+
+    public final static int tryCnt = 40;
+    protected ActionErrorListener mLibraryErrListener = new ActionErrorListener() {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            try {
-                backend = ((BackendService.BackendBinder) service).getService();
+        public void onActionError(int code) {
+            Log.i("wwj","shoutcast request code:"+code);
+        }
+    };
 
-                session = backend.getSession();
-                if (null == session)
-                    return;
+    public ServiceConnection connection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, final IBinder service) {
+            ThreadExecutor.runTask(new Runnable() {
 
-                library = new Library(session);
-            } catch (Exception e) {
-                Log.e(LogTag, "onServiceConnected:"+e.getMessage());
-            }
+                public void run() {
+                    int timeout=0;
+                    backend = ((BackendService.BackendBinder) service).getService();
+                    if (backend == null)
+                        return;
+                    try {
+                        do {
+                            Thread.sleep(300);
+                            Log.d("wwj", "get session for host:" + curHost);
+                            SessionWrapper sessionWrapper = backend.getSession(curHost);
+                            if (null != sessionWrapper) {
+                                if (!sessionWrapper.isTimeout()) {
+                                    session = sessionWrapper.getSession(curHost);
+                                }else{
+                                    timeout = tryCnt;
+                                }
+                                Log.d("wwj", sessionWrapper.toString());
+                            } else {
+                                Log.w("wwj", "waiting session to been created");
+                            }
+
+                            timeout++;
+                            if (timeout > tryCnt) {
+                                if (null == session) {
+                                    session = backend.getSession(curHost, curHostLibrary);
+                                    Log.w("wwj", "------force create session !");
+                                }
+                                break;
+                            }
+                        } while ((null == session) && (null != backend));
+
+
+                        if (session == null)
+                            return;
+
+                        updateTrackInfo(session);
+                        backend.updateCurSession(session);
+
+                        // begin search now that we have a backend
+                        library = new Library(session, mLibraryErrListener);
+                    }catch (Exception e){
+                        Log.e("wwj", "onServiceConnected:"+e.getMessage());
+                    }
+                }
+            });
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
+        public void onServiceDisconnected(ComponentName arg0) {
             backend = null;
             session = null;
+            library = null;
         }
     };
 
@@ -104,6 +155,9 @@ public class TuneInActivity extends BaseActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tunein);
+
+        curHost = getIntent().getStringExtra(Constants.EXTRA_ADDRESS);
+        curHostLibrary  = getIntent().getStringExtra(Constants.EXTRA_LIBRARY);
 
         /** init view **/
         //action back
@@ -165,18 +219,11 @@ public class TuneInActivity extends BaseActivity {
                         break;
                     case TuneInRequest.eTUNEIN_MSG_URL:
                         final String str = obj.toString();
-                        if (null == library) {
+                        if (null == session) {
                             Toast.makeText(TuneInActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (null != library) {
-                                    library.setRadioTunesUrl(str);
-                                }
-                            }
-                        }).start();
+                        session.setRadioTunesUrl(str);
                         break;
                     case TuneInRequest.eTUNEIN_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when
@@ -228,7 +275,7 @@ public class TuneInActivity extends BaseActivity {
     @Override
     public void onStart() {
         super.onStart();
-        this.bindService(new Intent(this, BackendService.class), conn, Context.BIND_AUTO_CREATE);
+        this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
         if (need_browser_index) {
             if (!listFragments.isEmpty())
                 ((RadioListFragment)listFragments.get(listFragments.size() - 1)).setOnItemClickListener(itemClickListener);
@@ -251,7 +298,7 @@ public class TuneInActivity extends BaseActivity {
     @Override
     public void onStop() {
         super.onStop();
-        this.unbindService(conn);
+        this.unbindService(connection);
     }
 
     @Override

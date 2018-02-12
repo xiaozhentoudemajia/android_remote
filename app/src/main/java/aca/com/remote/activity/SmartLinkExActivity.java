@@ -268,7 +268,7 @@ public class SmartLinkExActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    sendPacketAndSleep(4);
+                    sendPacketAndSleep(2);
                 }
 
                 if (mDone) {

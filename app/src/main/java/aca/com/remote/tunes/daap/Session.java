@@ -173,6 +173,20 @@ public class Session {
 		});
 	}
 
+	protected void fireAction(final String url, final String data, final boolean notify) {
+		ThreadExecutor.runTask(new Runnable() {
+			public void run() {
+				try {
+					RequestHelper.request(url, data, false);
+					if (notify)
+						notifyStatus();
+				} catch (Exception e) {
+					Log.e(TAG, "Fire Action Exception:" + e.getMessage());
+				}
+			}
+		});
+	}
+
 	protected void fireAction(final String url, final boolean notify, final ConnectionResponseListener listener) {
 		ThreadExecutor.runTask(new Runnable() {
 			public void run() {
@@ -185,6 +199,22 @@ public class Session {
 				}
 			}
 		});
+	}
+
+	public void setRadioTunesUrl(String url) {
+		Log.i("wwj", String.format("setRadioTunesUrl :%s", url));
+		if (null == url || url.isEmpty()) {
+			return;
+		}
+
+		String data = null;
+		if (url.contains("?")) {
+			//url contain parameter, transfer parameter by payload
+			data = url.substring(url.indexOf("?"));
+			url = url.substring(0, url.indexOf("?"));
+		}
+		this.fireAction(String.format("%s/ctrl-int/1/seturl?url=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
+				this.getRequestBase(), url, this.sessionId), data, false);
 	}
 
 	public void httpserver(String url) {

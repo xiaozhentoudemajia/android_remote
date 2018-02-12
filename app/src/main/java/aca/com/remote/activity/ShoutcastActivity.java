@@ -30,13 +30,17 @@ import java.util.List;
 import aca.com.remote.fragment.RadioListFragment;
 import aca.com.remote.fragmentnet.RankingFragment;
 import aca.com.remote.tunes.BackendService;
+import aca.com.remote.tunes.SessionWrapper;
+import aca.com.remote.tunes.daap.ActionErrorListener;
 import aca.com.remote.tunes.daap.Library;
 import aca.com.remote.tunes.daap.Session;
 import aca.com.remote.R;
+import aca.com.remote.tunes.util.Constants;
 import aca.com.remote.tunes.util.RadioRequestCallback;
 import aca.com.remote.tunes.util.ShoutCastRadioGenre;
 import aca.com.remote.tunes.util.ShoutCastRadioStation;
 import aca.com.remote.tunes.util.ShoutCastRequest;
+import aca.com.remote.tunes.util.ThreadExecutor;
 import aca.com.remote.uitl.CommonUtils;
 
 /**
@@ -54,34 +58,76 @@ public class ShoutcastActivity extends BaseActivity {
     private String tune_base = null;
 
     private List<Fragment> listFragments = new ArrayList<>();
-
+    public String curHost;
+    public String curHostLibrary;
     private BackendService backend;
-    private Session session;
-    private Library library = null;
+    public Session session;
+    private Library library;
+
+    public final static int tryCnt = 40;
+    protected ActionErrorListener mLibraryErrListener = new ActionErrorListener() {
+        @Override
+        public void onActionError(int code) {
+            Log.i("wwj","shoutcast request code:"+code);
+        }
+    };
 
     public ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            try {
-                backend = ((BackendService.BackendBinder) service).getService();
+        public void onServiceConnected(ComponentName className, final IBinder service) {
+            ThreadExecutor.runTask(new Runnable() {
 
-                Log.w(TAG, "onServiceConnected for ShoutcastActivity");
+                public void run() {
+                    int timeout=0;
+                    backend = ((BackendService.BackendBinder) service).getService();
+                    if (backend == null)
+                        return;
+                    try {
+                        do {
+                            Thread.sleep(300);
+                            Log.d("wwj", "get session for host:" + curHost);
+                            SessionWrapper sessionWrapper = backend.getSession(curHost);
+                            if (null != sessionWrapper) {
+                                if (!sessionWrapper.isTimeout()) {
+                                    session = sessionWrapper.getSession(curHost);
+                                }else{
+                                    timeout = tryCnt;
+                                }
+                                Log.d("wwj", sessionWrapper.toString());
+                            } else {
+                                Log.w("wwj", "waiting session to been created");
+                            }
 
-                session = backend.getSession();
-                if (session == null) {
-                    return;
+                            timeout++;
+                            if (timeout > tryCnt) {
+                                if (null == session) {
+                                    session = backend.getSession(curHost, curHostLibrary);
+                                    Log.w("wwj", "------force create session !");
+                                }
+                                break;
+                            }
+                        } while ((null == session) && (null != backend));
+
+
+                        if (session == null)
+                            return;
+
+                        updateTrackInfo(session);
+                        backend.updateCurSession(session);
+
+                        // begin search now that we have a backend
+                        library = new Library(session, mLibraryErrListener);
+                    }catch (Exception e){
+                        Log.e("wwj", "onServiceConnected:"+e.getMessage());
+                    }
                 }
-
-                library = new Library(session);
-            } catch (Exception e) {
-                Log.e(TAG, "onServiceConnected:"+e.getMessage());
-            }
+            });
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
+        public void onServiceDisconnected(ComponentName arg0) {
             backend = null;
             session = null;
+            library = null;
         }
     };
 
@@ -122,6 +168,9 @@ public class ShoutcastActivity extends BaseActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shoutcast);
+
+        curHost = getIntent().getStringExtra(Constants.EXTRA_ADDRESS);
+        curHostLibrary  = getIntent().getStringExtra(Constants.EXTRA_LIBRARY);
 
         /** init view **/
         //action back
@@ -174,18 +223,11 @@ public class ShoutcastActivity extends BaseActivity {
                         break;
                     case ShoutCastRequest.eSHOUTCAST_MSG_URL:
                         final String str = obj.toString();
-                        if (null == library) {
+                        if (null == session) {
                             Toast.makeText(ShoutcastActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (null != library) {
-                                    library.setRadioTunesUrl(str);
-                                }
-                            }
-                        }).start();
+                        session.setRadioTunesUrl(str);
                         break;
                     case ShoutCastRequest.eSHOUTCAST_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when
@@ -241,96 +283,11 @@ public class ShoutcastActivity extends BaseActivity {
             listFragments.remove(listFragments.size()-1);
     }
 
-    private void initWebView() {
-//        shoutcast_webview = (WebView)findViewById(R.id.shoutcast_webview);
-//        shoutcast_loading_bar = (ProgressBar)findViewById(R.id.shoutcast_loading_bar);
-//
-//        WebSettings shoutcast_webSettings = shoutcast_webview.getSettings();
-//        shoutcast_webSettings.setJavaScriptEnabled(true);
-//
-//        shoutcast_webview.setWebViewClient(new shoutcastWebViewClient());
-//        shoutcast_webview.setWebChromeClient(new shoutcastWebChromeClient());
-//        shoutcast_webview.loadUrl("http://www.shoutcast.com/");
-//
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        ((AppCompatActivity) this).setSupportActionBar(toolbar);
-//        toolbar.setPadding(0, CommonUtils.getStatusHeight(this), 0, 0);
-//
-//        ab = ((AppCompatActivity) this).getSupportActionBar();
-//        ab.setHomeAsUpIndicator(R.drawable.actionbar_back);
-//        ab.setDisplayHomeAsUpEnabled(true);
-//        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                onBackPressed();
-//            }
-//        });
-    }
-
     @Override
     public void onBackPressed() {
         if (listFragments.size() > 1) {
             removeFragment();
         } else
             super.onBackPressed();
-    }
-
-    private class shoutcastWebViewClient extends WebViewClient {
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            view.loadUrl(url);
-            return true;
-        }
-
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            super.onPageStarted(view, url, favicon);
-            shoutcast_loading_bar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-            shoutcast_loading_bar.setVisibility(View.GONE);
-        }
-
-        @Override
-        public void onReceivedError(WebView view, int errorCode,
-                                    String description, String failingUrl) {
-            super.onReceivedError(view, errorCode, description, failingUrl);
-        }
-
-        @Override
-        public void doUpdateVisitedHistory(WebView view, String url,
-                                           boolean isReload) {
-            super.doUpdateVisitedHistory(view, url, isReload);
-        }
-
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-            WebResourceResponse response = null;
-            String shoutcastUrl;
-
-            if (url.contains("?icy=")) {
-                shoutcastUrl = url.substring(0, url.lastIndexOf('/'));
-                Log.d(TAG, "shoutcastUrl:"+shoutcastUrl);
-                library.setShoutcastUrl(shoutcastUrl);
-            }
-
-            return response;
-        }
-    }
-
-    private class shoutcastWebChromeClient extends WebChromeClient {
-        @Override
-        public void onProgressChanged(WebView view, int newProgress) {
-            super.onProgressChanged(view, newProgress);
-        }
-
-        @Override
-        public void onReceivedTitle(WebView view, String title) {
-            super.onReceivedTitle(view, title);
-            //shoutcast_txt_title.setText(title);
-        }
     }
 }

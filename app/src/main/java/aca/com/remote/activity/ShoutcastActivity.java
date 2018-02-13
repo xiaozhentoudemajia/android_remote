@@ -227,7 +227,7 @@ public class ShoutcastActivity extends BaseActivity {
                             Toast.makeText(ShoutcastActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        session.setRadioTunesUrl(str);
+                        session.setRadioTunesUrl(str, "SHOUTcast");
                         break;
                     case ShoutCastRequest.eSHOUTCAST_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when

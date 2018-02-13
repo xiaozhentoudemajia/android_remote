@@ -223,7 +223,7 @@ public class TuneInActivity extends BaseActivity {
                             Toast.makeText(TuneInActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        session.setRadioTunesUrl(str);
+                        session.setRadioTunesUrl(str, "TuneIn");
                         break;
                     case TuneInRequest.eTUNEIN_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when

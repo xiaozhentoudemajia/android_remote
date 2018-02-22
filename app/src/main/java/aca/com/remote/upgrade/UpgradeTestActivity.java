@@ -224,19 +224,26 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
 
     };
 
+    private void updateNotify(String str) {
+        notifyStr += "\n" + str;
+        upg_notify.setText(notifyStr);
+    }
+
     private void startUpgrade(DeviceInfo device,UpgPackage upgPackage) {
         if (!upgPackage.checkModelname(device.getModelname())) {
-            Log.d(TAG, "Modelname is not match");
+            updateNotify("Modelname is not match");
             return;
         }
         if (!upgPackage.checkBoardname(device.getBoardname())) {
-            Log.d(TAG, "Boardname is not match");
+            updateNotify("not find newer version");
             return;
         }
         if (upgPackage.compareVersion(device.getVersion()) <= 0) {
-            Log.d(TAG, "not find newer version");
+            updateNotify("not find newer version");
             return;
         }
+
+        updateNotify("parsering local upgpackage");
         upgPackage.parseScript();
         List<PartitionInfo> upgList = upgPackage.getUpglists();
         Log.d(TAG, "upgList.size():"+upgList.size());

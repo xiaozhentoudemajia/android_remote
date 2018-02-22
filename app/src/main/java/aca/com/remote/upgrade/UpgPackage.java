@@ -109,8 +109,8 @@ public class UpgPackage {
         String[] verParts1 = verStr1.split("_");
         String[] verParts2 = verStr2.split("_");
 
-        String[] vers1 = verParts1[2].split("\\.");
-        String[] vers2 = verParts2[2].split("\\.");
+        String[] vers1 = verParts1[verParts1.length-1].split("\\.");
+        String[] vers2 = verParts2[verParts2.length-1].split("\\.");
 
         for (i=0; i<vers1.length || i<vers2.length; i++) {
             if (vers1[i] == null || vers1[i].isEmpty())

@@ -246,9 +246,8 @@ public class Library {
 
         try {
             byte[] raw = RequestHelper
-                     .request(String 
-                              .format("%s/databases/%d/containers/%d/items?session-id=%s&meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,daap.songtime&type=music&sort=name&include-sort-headers=1&query=('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')",
-                                        session.getRequestBase(), session.databaseId, session.musicId, session.sessionId), false);
+                     .request(String.format("%s/databases/%d/containers/%d/items?session-id=%s&meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,daap.songtime&type=music&sort=name&include-sort-headers=1&query=('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')",
+                              session.getRequestBase(), session.databaseId, session.musicId, session.sessionId), false);
 
             // parse list, passing off events in the process
             ResponseParser.performSearch(raw, listener, MLIT_PATTERN, false);

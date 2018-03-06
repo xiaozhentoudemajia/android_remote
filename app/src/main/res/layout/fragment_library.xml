@@ -37,16 +37,16 @@
             android:background="@drawable/ic_menu_wifi_wps"
             />
 
-        <Button
-            android:id="@+id/upgrade"
-            android:layout_width="144dp"
-            android:layout_height="44dp"
-            android:layout_marginLeft="10dp"
-            android:text="upgrade"
-            android:textSize="8dp"
-            />
-
     </LinearLayout>
+
+    <Button
+        android:id="@+id/upgrade"
+        android:layout_width="124dp"
+        android:layout_height="44dp"
+        android:layout_marginLeft="14dp"
+        android:text="upgrade"
+        android:textSize="8dp"
+        />
 
     <ListView
         android:id="@android:id/list"

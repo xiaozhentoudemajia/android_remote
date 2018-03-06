@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -122,6 +123,22 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
         TextView text = (TextView) findViewById(R.id.toolbar_text);
         text.setText("Search Libary");
 
+        Button allPause = (Button) findViewById(R.id.all_pause);
+        allPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                allPause();
+            }
+        });
+
+        Button allPlay = (Button) findViewById(R.id.all_play);
+        allPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                allPlay();
+            }
+        });
+
         context = this;
         if (context != null) {
             Intent intent = new Intent(context, BackendService.class);
@@ -193,6 +210,20 @@ public class SearchLibraryActivity extends BaseActivity implements BackendServic
             mTimer.cancel();
             context.unbindService(connection);
             backendService.unregisterProbeListener(this);
+        }
+    }
+
+    private void allPause() {
+        for (ServiceInfo service : adapter.known) {
+            Log.w("wwj", String.format("ZeroConf Library: %s", service.getHostAddresses()[0]));
+            Session.controlPauseWithoutLogin(service.getHostAddresses()[0]);
+        }
+    }
+
+    private void allPlay() {
+        for (ServiceInfo service : adapter.known) {
+            Log.w("wwj", String.format("ZeroConf Library: %s", service.getHostAddresses()[0]));
+            Session.controlPlayWithoutLogin(service.getHostAddresses()[0]);
         }
     }
 

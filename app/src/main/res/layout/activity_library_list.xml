@@ -34,11 +34,31 @@
         </RelativeLayout>
     </aca.com.magicasakura.widgets.TintToolbar>
 
+    <LinearLayout
+        android:id="@+id/all_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/toolbar">
+        
+        <Button
+            android:id="@+id/all_pause"
+            android:text="All pause"
+            android:layout_width="150dp"
+            android:layout_height="40dp" />
+
+        <Button
+            android:id="@+id/all_play"
+            android:text="All play"
+            android:layout_width="150dp"
+            android:layout_height="40dp" />
+    </LinearLayout>
+
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/toolbar"
+        android:layout_below="@id/all_control"
         />
 
     <FrameLayout

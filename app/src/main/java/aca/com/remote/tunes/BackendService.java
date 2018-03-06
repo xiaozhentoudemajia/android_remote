@@ -437,7 +437,7 @@ public class BackendService extends Service implements ServiceListener {
          ServiceInfo serviceInfo = getZeroConf().getServiceInfo(TOUCH_ABLE_TYPE, library);
          // try and get the DACP type only if we cannot find any touchable
          if (serviceInfo == null) {
-            serviceInfo = getZeroConf().getServiceInfo(DACP_TYPE, library);
+//            serviceInfo = getZeroConf().getServiceInfo(DACP_TYPE, library);
          }
 
          if (serviceInfo == null) {

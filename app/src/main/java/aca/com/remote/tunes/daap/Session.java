@@ -201,6 +201,18 @@ public class Session {
 		});
 	}
 
+	protected static void fireActionWithoutLogin(final String url, final boolean notify) {
+		ThreadExecutor.runTask(new Runnable() {
+			public void run() {
+				try {
+					RequestHelper.attemptRequest(url);
+				} catch (Exception e) {
+					Log.e(TAG, "Fire Action Exception:" + e.getMessage());
+				}
+			}
+		});
+	}
+
 	public void setRadioTunesUrl(String url, String type) {
 		Log.i("wwj", String.format("setRadioTunesUrl :%s", url));
 		if (null == url || url.isEmpty() || null == type || type.isEmpty()) {
@@ -215,6 +227,20 @@ public class Session {
 		}
 		this.fireAction(String.format("%s/ctrl-int/1/seturl?url=%s&type=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
 				this.getRequestBase(), url, type, this.sessionId), data, false);
+	}
+
+	public static void controlPauseWithoutLogin(String host) {
+		String base = String.format("http://%s:3689", host);
+		// http://192.168.254.128:3689/ctrl-int/1/playpause?session-id=130883770
+		fireActionWithoutLogin(String.format("%s/ctrl-int/1/pause?session-id=%s", base, 0x01),
+				true);
+	}
+
+	public static void controlPlayWithoutLogin(String host) {
+		String base = String.format("http://%s:3689", host);
+		// http://192.168.254.128:3689/ctrl-int/1/playpause?session-id=130883770
+		fireActionWithoutLogin(String.format("%s/ctrl-int/1/playpause?session-id=%s", base, 0x01),
+				true);
 	}
 
 	public void httpserver(String url) {

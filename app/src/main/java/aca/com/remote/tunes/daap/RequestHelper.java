@@ -319,6 +319,65 @@ public class RequestHelper {
 
    }
 
+    public static byte[] request(String remoteUrl, int timeout, ConnectionResponseListener listener) throws Exception {
+        Log.d(TAG, String.format("started request(remote=%s)", remoteUrl));
+        Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+
+        byte[] buffer = new byte[1024];
+
+        URL url = new URL(remoteUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setAllowUserInteraction(false);
+        connection.setRequestProperty("User-agent","acacontrol");
+        connection.setRequestProperty("Viewer-Only-Client", "1");
+        connection.setRequestProperty("Client-Daap-Version", "3.10");
+        // allow both GZip and Deflate (ZLib) encodings
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(timeout);
+
+        connection.connect();
+
+        if(null != listener){
+            listener.oResponse(connection.getResponseCode(),connection.getResponseMessage());
+        }
+
+        if (connection.getResponseCode() >= HttpURLConnection.HTTP_UNAUTHORIZED)
+            throw new Exception("HTTP Error Response Code: " + connection.getResponseCode());
+
+        // obtain the encoding returned by the server
+        String encoding = connection.getContentEncoding();
+
+        InputStream inputStream = null;
+
+        // create the appropriate stream wrapper based on the encoding type
+        if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
+            inputStream = new GZIPInputStream(connection.getInputStream());
+        } else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
+            inputStream = new InflaterInputStream(connection.getInputStream(), new Inflater(true));
+        } else {
+            inputStream = connection.getInputStream();
+        }
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+        } finally {
+            if (os != null) {
+                os.flush();
+                os.close();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+
+        return os.toByteArray();
+    }
 
    public static Bitmap requestThumbnail(Session session, int itemid) throws Exception {
       return requestThumbnail(session, itemid, "");

@@ -12,12 +12,14 @@ public class PartitionInfo {
     private long offset;
     private long size;
     private String filePath;
+    private String md5;
 
     public PartitionInfo(String name, long offset, long size) {
         this.name = name;
         this.offset = offset;
         this.size = size;
         this.filePath = null;
+        this.md5 = null;
         Log.d(TAG, "newpart name:"+name+"  offset:"+offset+"   size:"+size);
     }
 
@@ -27,6 +29,14 @@ public class PartitionInfo {
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public void setFileMd5(String md5sum) {
+        md5 = md5sum;
+    }
+
+    public String getFileMd5() {
+        return md5;
     }
 
     public String getName() {

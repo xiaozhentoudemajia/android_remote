@@ -51,6 +51,7 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
     public final static int NOTIFY_NOTICE_UPDATE = 0x40;
     public final static int NOTIFY_DOWNLOAD_COUNT = 0x50;
     public final static int NOTIFY_DOWNLOAD_PART = 0x51;
+    public final static int NOTIFY_DOWNLOAD_PART_FAIL = 0x52;
 
     public ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -104,21 +105,21 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
         upg_firmwareversion = (TextView) findViewById(R.id.upg_firmwareversion);
         upg_notify = (TextView) findViewById(R.id.upg_notify);
 
-		updateLocalPackage.setClickable(false);
-		updateFirmware.setClickable(false);
+        updateLocalPackage.setClickable(false);
+        updateFirmware.setClickable(false);
 
         updateLocalPackage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "click updateLocalPackage");
-				
-				if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
-					notifySatus("Now is updating local package or updating firmware, please wait");
-					return;
-				}
 
-				if (upgradeModel != null)
-                	upgradeModel.startLocalUpdateTimer(0, 1000*30);
+                if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
+                    notifySatus("Now is updating local package or updating firmware, please wait");
+                    return;
+                }
+
+                if (upgradeModel != null)
+                    upgradeModel.startLocalUpdateTimer(0, 1000*30);
             }
         });
 
@@ -127,15 +128,15 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
             public void onClick(View v) {
                 Log.d(TAG, "click updateFirmware");
 
-				if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
-					notifySatus("Now is updating local package or updating firmware, please wait");
-					return;
-				}
+                    if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
+                        notifySatus("Now is updating local package or updating firmware, please wait");
+                        return;
+                    }
 
-				upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.FIRMWAREUPDATE);
-				
-				if (mainDevice != null)
-                	mainDevice.getDeviceInfo();
+                    upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.FIRMWAREUPDATE);
+
+                    if (mainDevice != null)
+                        mainDevice.getDeviceInfo();
             }
         });
 
@@ -163,7 +164,10 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
 
     public void notifySetUpgPartStatus(int index, int result){
         Log.d(TAG, "notifySetUpgPartStatus index:"+index+"  result: " + result);
-        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PART, index, result));
+        if (result != 0)
+            mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PART_FAIL, index, result));
+        else
+            mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PART, index, result));
     }
 
     public void notifyBurnStatus(int result) {
@@ -179,22 +183,22 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
                     upgradeModel = new UpgradeModel(mContext, session, upgNotify);
                     mainDevice = new DeviceInfo(session, upgNotify);
 
-					if (upgradeModel != null)
-						updateLocalPackage.setClickable(true);
+                    if (upgradeModel != null)
+                        updateLocalPackage.setClickable(true);
                     break;
                 case NOTIFY_FIRMWARE_READY:
                     Log.d(TAG, "NOTIFY_FIRMWARE_READY");
                     upg_firmwareversion.setText("firmwareversion: " + (String) msg.obj);
 
-					if (mainDevice!=null && upgPackage!=null) {
-                    	startUpgrade(mainDevice, upgPackage);
-					}
+                    if (mainDevice!=null && upgPackage!=null) {
+                        startUpgrade(mainDevice, upgPackage);
+                    }
                     break;
                 case NOTIFY_LOACLPACK_UPDATE:
                     upg_localversion.setText("localversion: " + (String) msg.obj);
                     upgPackage = upgradeModel.getUpgPackage();
-					if (mainDevice!=null && upgPackage!=null)
-						updateFirmware.setClickable(true);
+                    if (mainDevice!=null && upgPackage!=null)
+                        updateFirmware.setClickable(true);
                     break;
                 case NOTIFY_NOTICE_UPDATE:
                     Log.d(TAG, "NOTIFY_NOTICE_UPDATE");
@@ -208,7 +212,7 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
                         notifyStr += "\n" + "start to burn";
                         upg_notify.setText(notifyStr);
                         mainDevice.startBurnFirwmware();
-						upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.IDLE);
+                        upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.IDLE);
                         break;
                     }
                     PartitionInfo part = upgPackage.getUpglists().get(cur_index);
@@ -217,6 +221,12 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
                     upg_notify.setText(notifyStr);
                     mainDevice.setUpgpartinfo(cur_index, part);
                     cur_index++;
+                    break;
+                case NOTIFY_DOWNLOAD_PART_FAIL:
+                    cur_index = 0;
+                    notifyStr += "\n" +  "send part("+msg.arg1+") fail("+msg.arg2+")";
+                    upg_notify.setText(notifyStr);
+                    upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.IDLE);
                     break;
             }
         }
@@ -239,7 +249,9 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
             return;
         }
         if (upgPackage.compareVersion(device.getVersion()) <= 0) {
-            updateNotify("not find newer version");
+            Log.d(TAG, "not find newer version");
+            notifyStr += "\n" + "not find newer version";
+            upg_notify.setText(notifyStr);
             return;
         }
 

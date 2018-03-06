@@ -26,6 +26,7 @@ import aca.com.remote.activity.BaseActivity;
 import aca.com.remote.activity.MainActivity;
 import aca.com.remote.tunes.BackendService;
 import aca.com.remote.tunes.TagListener;
+import aca.com.remote.tunes.daap.ConnectionResponseListener;
 import aca.com.remote.tunes.daap.Library;
 import aca.com.remote.tunes.daap.RequestHelper;
 import aca.com.remote.tunes.daap.Response;
@@ -40,6 +41,23 @@ import aca.com.remote.uitl.L;
 public class LibraryFirmwareUpdate {
     private final String TAG = "Update";
     protected static Session session;
+    private int errCode;
+    private String msg;
+    private ConnectionResponseListener listener = new ConnectionResponseListener() {
+        @Override
+        public void oResponse(int code, String message) {
+            errCode = 0;
+            msg = null;
+            Log.d(TAG, "setUpgpartinfo code:"+code+" msg: "+message);
+            if (code != 417)
+                return;
+
+            String[] strs = message.split("#");
+            errCode = Integer.parseInt(strs[0]);
+            msg = strs[1];
+            Log.d(TAG, "setUpgpartinfo errCode:"+errCode+" msg: "+msg);
+        }
+    };
 
     public LibraryFirmwareUpdate(Session session){
         Log.d(TAG, "LibraryFirmwareUpdate");
@@ -132,14 +150,15 @@ public class LibraryFirmwareUpdate {
 
     public int setUpgpartinfo(int index, PartitionInfo info){
         try {
-            String url = String.format("%s/upgrade/%d/items?name=%s&offset=%d&size=%d&file=%s",
+            String url = String.format("%s/upgrade/%d/items?name=%s&offset=%d&size=%d&file=%s&md5=%s",
                     session.getRequestBase(), index,
-                    info.getName(), info.getOffset(), info.getSize(), info.getFilePath());
+                    info.getName(), info.getOffset(), info.getSize(), info.getFilePath(), info.getFileMd5());
             Log.d(TAG, "setUpgpartinfo: "+ url);
-            byte[] raw = RequestHelper.request(url,false);
+            byte[] raw = RequestHelper.request(url,40000,listener);
             Response response = ResponseParser.performParse(raw);
         } catch (Exception e) {
             Log.w(TAG, "setUpgpartinfo Exception:" + e.getMessage());
+            return errCode;
         }
         return 0;
     }

@@ -81,14 +81,14 @@ public class UpgPackage {
     public boolean checkModelname(String name) {
 		if (name == null || modelname == null)
 			return false;
-		
+
         return modelname.equals(name);
     }
 
     public boolean checkBoardname(String name) {
 		if (name == null || boardname == null)
 			return false;
-		
+
         return boardname.equals(name);
     }
 
@@ -100,11 +100,11 @@ public class UpgPackage {
         String verStr2 = ver;
 
         Log.d(TAG, "compareVersion "+verStr1+" : "+verStr2);
-		
-		if (verStr1==null || verStr1.isEmpty())
-			return -1;
-		if (verStr2==null || verStr2.isEmpty())
-			return -1;
+
+	if (verStr1==null || verStr1.isEmpty())
+		return -1;
+	if (verStr2==null || verStr2.isEmpty())
+		return -1;
 
         String[] verParts1 = verStr1.split("_");
         String[] verParts2 = verStr2.split("_");
@@ -218,6 +218,7 @@ public class UpgPackage {
             String offset;
             String size;
             String file;
+            String md5;
 
             String countStr = iniUtils.getValue("UPGPART_COUNT", "count");
             int count = Integer.valueOf(countStr);
@@ -228,8 +229,10 @@ public class UpgPackage {
                 offset = iniUtils.getValue(section, "offset");
                 size = iniUtils.getValue(section, "size");
                 file = iniUtils.getValue(section, "file");
+                md5 = iniUtils.getValue(section, "md5");
                 part = new PartitionInfo(name, Integer.valueOf(offset), Integer.valueOf(size));
                 part.setFilePath(file);
+                part.setFileMd5(md5);
                 upglists.add(part);
             }
 

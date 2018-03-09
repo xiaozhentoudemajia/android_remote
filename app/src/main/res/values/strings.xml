@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <string name="version">ver1.3.4</string>
+    <string name="version">ver1.3.5</string>
     <string name="local_music">Local Music</string>
     <string name="recent_play">Recent</string>
     <string name="local_manage">Download</string>

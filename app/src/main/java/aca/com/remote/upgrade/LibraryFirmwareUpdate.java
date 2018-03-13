@@ -175,6 +175,21 @@ public class LibraryFirmwareUpdate {
         return 0;
     }
 
+    public void getUpgradeStatus(DeviceInfo.BurnReply reply) {
+        try {
+            Log.d(TAG, "getUpgradeStatus() requesting...");
+
+            byte[] raw = RequestHelper.request(
+                    String.format("%s/upgrade?getstatus=0", session.getRequestBase()), false);
+            Response response = ResponseParser.performParse(raw);
+            reply.state = response.getNested("mupd").getNumber("mstt").intValue();
+            reply.partidx = response.getNested("mupd").getNumber("mupi").intValue();
+            reply.process = response.getNested("mupd").getNumber("mupp").intValue();;
+        } catch (Exception e) {
+            Log.w(TAG, "getFirmwareVersion Exception:" + e.getMessage());
+        }
+    }
+
     public int postUpgpart(int index, PartitionInfo info){
         try {
             String url = String.format("%s/upgrade/%d/part",

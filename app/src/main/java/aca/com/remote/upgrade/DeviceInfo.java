@@ -4,11 +4,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.health.TimerStat;
 import android.util.Log;
 import android.widget.BaseAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import aca.com.remote.tunes.TagListener;
 import aca.com.remote.tunes.daap.Response;
@@ -123,6 +126,8 @@ public class DeviceInfo {
         });
     }
 
+    Timer timer = new Timer();
+
     public void startBurnFirwmware() {
         ThreadExecutor.runTask(new Runnable() {
             @Override
@@ -130,8 +135,50 @@ public class DeviceInfo {
                 int ret;
                 ret = updateLibrary.startBurnFirmware();
                 notify.notifyBurnStatus(ret);
+                timer.schedule(new checkBurnReplyTask(), 0, 500);
+                Log.d(TAG, "checkBurnReplyTask start timer");
             }
         });
+    }
+
+    public final static int BURNSTATE_IDLE = 0;
+    public final static int BURNSTATE_DOWNLOADING = 1;
+    public final static int BURNSTATE_COMPLETE = 2;
+    public final static int BURNSTATE_ABORT = 3;
+    public final static int BURNSTATE_PART_PROCESS = 4;
+    public final static int BURNSTATE_PART_UPDATING = 5;
+    public final static int BURNSTATE_PART_SUCCESS = 6;
+
+    public class BurnReply {
+        int state;
+        int partidx;
+        int process;
+    }
+
+    private class checkBurnReplyTask extends TimerTask {
+        private int processBak = 0;
+        @Override
+        public void run() {
+            BurnReply reply = new BurnReply();
+            updateLibrary.getUpgradeStatus(reply);
+            if (reply.state == BURNSTATE_COMPLETE) {
+                notify.notifySatus("BURNSTATE_COMPLETE");
+                timer.cancel();
+            } else if (reply.state == BURNSTATE_ABORT) {
+                notify.notifySatus("BURNSTATE_ABORT");
+                timer.cancel();
+            }  else if (reply.state == BURNSTATE_PART_UPDATING) {
+                notify.notifySatus("BURNSTATE_PART_UPDATING upgpart"+reply.partidx);
+            } else if (reply.state == BURNSTATE_PART_SUCCESS) {
+                notify.notifySatus("BURNSTATE_PART_SUCCESS upgpart"+reply.partidx);
+            } else if (reply.state == BURNSTATE_PART_PROCESS) {
+                if (processBak != reply.process) {
+                    notify.notifySatus("upgpart" + reply.partidx +
+                            " process:" + reply.process);
+                    processBak = reply.process;
+                }
+            }
+        }
     }
  }
 

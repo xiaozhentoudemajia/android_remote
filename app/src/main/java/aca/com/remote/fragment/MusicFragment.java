@@ -465,7 +465,7 @@ public class MusicFragment extends BaseFragment {
                     String url = minfo.data;
 
                     MusicFragment.this.httpPlay(url);
-                    ((TabActivity)mContext).session.httpserver("http://" + getLocalIpStr(mContext)+":"+ HttpServerImpl.DEFAULT_SERVER_PORT + "/getFile?fileName=" + "Local.mp3");
+                    ((TabActivity)mContext).session.httpserver("http://" + getLocalIpStr(mContext)+":"+ getHttpServerPort() + "/getFile?fileName=" + "Local.mp3");
                 }
             }
         }

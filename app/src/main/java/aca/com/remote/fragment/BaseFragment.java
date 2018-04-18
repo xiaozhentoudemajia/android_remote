@@ -68,6 +68,10 @@ public class BaseFragment extends Fragment implements MusicStateListener {
 
     }
 
+    int getHttpServerPort() {
+        return ((BaseActivity) getActivity()).getHttpServerPort();
+    }
+
     void httpPlay(String url) {
         ((BaseActivity) getActivity()).httpPlay(url);
     }

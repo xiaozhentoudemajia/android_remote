@@ -37,8 +37,8 @@ public class HttpServerImpl extends NanoHTTPD {
     private String transPath;
     private String upgPath;
 
-    public HttpServerImpl() {
-        super(DEFAULT_SERVER_PORT);
+    public HttpServerImpl(int port) {
+        super(port);
     }
 
     @Override

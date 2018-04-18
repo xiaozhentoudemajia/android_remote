@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+import aca.com.nanohttpd.HttpServerImpl;
 import aca.com.nanohttpd.HttpService;
 import aca.com.remote.MediaAidlInterface;
 import aca.com.remote.R;
@@ -177,6 +178,13 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
     public void httpPlay(String url) {
         if (binder != null)
             binder.setTransPath(url);
+    }
+
+    public int getHttpServerPort() {
+        if (binder != null)
+            return binder.getHttpServerPort();
+        else
+            return HttpServerImpl.DEFAULT_SERVER_PORT;
     }
 
     public void setUpgPath(String path) {

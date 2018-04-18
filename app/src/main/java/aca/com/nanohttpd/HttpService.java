@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import aca.com.nanohttpd.protocols.http.SysFreePort;
+
 /**
  * 
  * @author lixm
@@ -18,6 +20,7 @@ public class HttpService extends Service {
 	private static String TAG = "lixm";
 
 	private HttpServerImpl mHttpServer;
+	private static int freePort = HttpServerImpl.DEFAULT_SERVER_PORT;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -26,7 +29,13 @@ public class HttpService extends Service {
 
 	@Override
 	public void onCreate() {
-		mHttpServer = new HttpServerImpl();
+		try {
+			freePort = SysFreePort.custom().getPortAndFree();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Log.i(TAG, "HttpService get free Port:" + freePort);
+		mHttpServer = new HttpServerImpl(freePort);
         try {
 			mHttpServer.start();
 		} catch (IOException e) {
@@ -58,7 +67,9 @@ public class HttpService extends Service {
 		public void setTransPath(String data){
 			HttpService.this.mHttpServer.setTransPath(data);
 		}
-
+		public int getHttpServerPort() {
+			return freePort;
+		}
 		public void setUpgPath(String data){
 			HttpService.this.mHttpServer.setUpgPath(data);
 		}

@@ -27,31 +27,28 @@ import aca.com.remote.tunes.util.ThreadExecutor;
 
 public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
     private final String TAG = "UpgTest";
+
+    public final static int NOTIFY_SESSION_READY = 0x10;
+    public final static int NOTIFY_FIRMWARE_VERSION = 0x20;
+    public final static int NOTIFY_DOWNLOAD_PROCESS = 0x30;
+    public final static int NOTIFY_BURN_PROCESS = 0x40;
+    public final static int NOTIFY_BURN_ROOTFS = 0x50;
+    public final static int NOTIFY_CHECK_UPG_RESULT = 0x60;
+    public final static int NOTIFY_NOTICE_UPDATE = 0x70;
+
     private Context mContext;
     private UpgNotify upgNotify;
-    private Button updateLocalPackage;
-    private Button updateFirmware;
-    private TextView upg_localversion;
+    private Button buttonUpdate;
+    private Button buttonCheck;
     private TextView upg_firmwareversion;
     private TextView upg_notify;
     private String notifyStr;
 
     private BackendService backendService;
     private Session session;
-
-    private UpgradeModel upgradeModel;
     private DeviceInfo mainDevice;
-    private UpgPackage upgPackage;
 
     protected int cur_index;
-
-    public final static int NOTIFY_SESSION_READY = 0x10;
-    public final static int NOTIFY_FIRMWARE_READY = 0x20;
-    public final static int NOTIFY_LOACLPACK_UPDATE = 0x30;
-    public final static int NOTIFY_NOTICE_UPDATE = 0x40;
-    public final static int NOTIFY_DOWNLOAD_COUNT = 0x50;
-    public final static int NOTIFY_DOWNLOAD_PART = 0x51;
-    public final static int NOTIFY_DOWNLOAD_PART_FAIL = 0x52;
 
     public ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -99,44 +96,34 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
         upgNotify = this;
 
         setContentView(R.layout.activity_upgrade_test);
-        updateLocalPackage = (Button) findViewById(R.id.updateLocalPackage);
-        updateFirmware = (Button) findViewById(R.id.updateFirmware);
-        upg_localversion = (TextView) findViewById(R.id.upg_localversion);
+        buttonCheck = (Button) findViewById(R.id.updateCheck);
+        buttonUpdate = (Button) findViewById(R.id.updateStart);
         upg_firmwareversion = (TextView) findViewById(R.id.upg_firmwareversion);
         upg_notify = (TextView) findViewById(R.id.upg_notify);
 
-        updateLocalPackage.setClickable(false);
-        updateFirmware.setClickable(false);
+        buttonCheck.setClickable(false);
+        buttonUpdate.setClickable(false);
 
-        updateLocalPackage.setOnClickListener(new View.OnClickListener() {
+        buttonCheck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "click updateLocalPackage");
-
-                if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
-                    notifySatus("Now is updating local package or updating firmware, please wait");
-                    return;
+                if (mainDevice != null) {
+                    if(0 == mainDevice.getState())
+                        mainDevice.checkUpgVersion();
                 }
-
-                if (upgradeModel != null)
-                    upgradeModel.startLocalUpdateTimer(0, 1000*30);
             }
         });
 
-        updateFirmware.setOnClickListener(new View.OnClickListener() {
+        buttonUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "click updateFirmware");
-
-                    if (upgradeModel.getUpgStatus() != UpgradeModel.UpgStatus.IDLE) {
-                        notifySatus("Now is updating local package or updating firmware, please wait");
-                        return;
+                    if (mainDevice != null) {
+                        if (0 == mainDevice.getState()) {
+                            mainDevice.startUpgrade();
+                        }
                     }
-
-                    upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.FIRMWAREUPDATE);
-
-                    if (mainDevice != null)
-                        mainDevice.getDeviceInfo();
             }
         });
 
@@ -147,31 +134,29 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
         mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_NOTICE_UPDATE, info));
     }
 
-    public void notifyLocalversion(String version) {
-        Log.d(TAG, "notifyLocalversion:" + version);
-        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_LOACLPACK_UPDATE, version));
+    @Override
+    public void notifyDownloadSatus(int percent) {
+        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PROCESS, percent,0));
+    }
+
+    public void notifyCheckUpgResult(String result) {
+        Log.d(TAG, "notifyCheckUpgResult:" + result);
+        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_CHECK_UPG_RESULT, result));
     }
 
     public void notifyFirmwareversion(String version) {
         Log.d(TAG, "notifyFirmwareversion:" + version);
-        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_FIRMWARE_READY, version));
+        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_FIRMWARE_VERSION, version));
     }
 
-    public void notifySetCountStatus(int result) {
-        Log.d(TAG, "notifySetCountStatus:" + result);
-        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_COUNT, result));
+    public void notifyBurnStatus(int percent) {
+        Log.d(TAG, "notifyBurnStatus:" + percent);
+        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_BURN_PROCESS, percent,0));
     }
 
-    public void notifySetUpgPartStatus(int index, int result){
-        Log.d(TAG, "notifySetUpgPartStatus index:"+index+"  result: " + result);
-        if (result != 0)
-            mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PART_FAIL, index, result));
-        else
-            mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_DOWNLOAD_PART, index, result));
-    }
-
-    public void notifyBurnStatus(int result) {
-        Log.d(TAG, "notifyBurnStatus:" + result);
+    @Override
+    public void notifyBurnRootfs() {
+        mHandler.sendMessage(mHandler.obtainMessage(NOTIFY_BURN_ROOTFS));
     }
 
     public Handler mHandler = new Handler() {
@@ -180,90 +165,57 @@ public class UpgradeTestActivity extends BaseActivity implements UpgNotify {
             switch (msg.what) {
                 case NOTIFY_SESSION_READY:
                     Log.d(TAG, "NOTIFY_SESSION_READY");
-                    upgradeModel = new UpgradeModel(mContext, session, upgNotify);
                     mainDevice = new DeviceInfo(session, upgNotify);
-
-                    if (upgradeModel != null)
-                        updateLocalPackage.setClickable(true);
+                    mainDevice.getDeviceInfo();
+                    buttonCheck.setClickable(true);
                     break;
-                case NOTIFY_FIRMWARE_READY:
-                    Log.d(TAG, "NOTIFY_FIRMWARE_READY");
-                    upg_firmwareversion.setText("firmwareversion: " + (String) msg.obj);
-
-                    if (mainDevice!=null && upgPackage!=null) {
-                        startUpgrade(mainDevice, upgPackage);
+                case NOTIFY_CHECK_UPG_RESULT:
+                    Log.d(TAG, "NOTIFY_CHECK_UPG_RESULT");
+                    String result = (String) msg.obj;
+                    if(result.equalsIgnoreCase("UPG_NEW")) {
+                        buttonUpdate.setClickable(true);
+                        notifyStr += "\n"+"Have new version,Please update!";
+                    }else{
+                        notifyStr += "\n"+"Already is new .";
                     }
+                    upg_notify.setText(notifyStr);
                     break;
-                case NOTIFY_LOACLPACK_UPDATE:
-                    upg_localversion.setText("localversion: " + (String) msg.obj);
-                    upgPackage = upgradeModel.getUpgPackage();
-                    if (mainDevice!=null && upgPackage!=null)
-                        updateFirmware.setClickable(true);
+
+                case NOTIFY_FIRMWARE_VERSION:
+                    Log.d(TAG, "NOTIFY_FIRMWARE_VERSION");
+                    upg_firmwareversion.setText("SW Ver: " + (String) msg.obj);
                     break;
                 case NOTIFY_NOTICE_UPDATE:
-                    Log.d(TAG, "NOTIFY_NOTICE_UPDATE");
-                    notifyStr += "\n" + (String) msg.obj;
+                    notifyStr += "\n" +(String)msg.obj;
                     upg_notify.setText(notifyStr);
                     break;
-                case NOTIFY_DOWNLOAD_COUNT:
-                    cur_index = 0;
-                case NOTIFY_DOWNLOAD_PART:
-                    if (cur_index >= upgPackage.getUpglists().size()) {
-                        notifyStr += "\n" + "start to burn";
-                        upg_notify.setText(notifyStr);
-                        mainDevice.startBurnFirwmware();
-                        upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.IDLE);
-                        break;
+                case NOTIFY_DOWNLOAD_PROCESS:
+                    if(notifyStr.contains("download process: ...")){
+                        notifyStr += ".";
+                    }else{
+                        notifyStr += "\n\n" +"download process: ...";
                     }
-                    PartitionInfo part = upgPackage.getUpglists().get(cur_index);
-                    Log.d(TAG, "partname:"+part.getName());
-                    notifyStr += "\n" + "send part:" + part.getName();
+                    if(30==msg.arg1)
+                        notifyStr += "\n";
                     upg_notify.setText(notifyStr);
-                    mainDevice.setUpgpartinfo(cur_index, part);
-                    cur_index++;
                     break;
-                case NOTIFY_DOWNLOAD_PART_FAIL:
-                    cur_index = 0;
-                    notifyStr += "\n" +  "send part("+msg.arg1+") fail("+msg.arg2+")";
+                case NOTIFY_BURN_PROCESS:
+                    if(notifyStr.contains("burn process: ...")){
+                        notifyStr += ".";
+                    }else{
+                        notifyStr += "\n\n" +"burn process: ...";
+                    }
+                    if(30==msg.arg1)
+                        notifyStr += "\n";
                     upg_notify.setText(notifyStr);
-                    upgradeModel.setUpgStatus(UpgradeModel.UpgStatus.IDLE);
+                    break;
+                case NOTIFY_BURN_ROOTFS:
+                    notifyStr += "\n\n" +  "Burn rootfs ...\n It's need about 5 minutes.\n Dont power off!";
+                    upg_notify.setText(notifyStr);
                     break;
             }
         }
 
 
     };
-
-    private void updateNotify(String str) {
-        notifyStr += "\n" + str;
-        upg_notify.setText(notifyStr);
-    }
-
-    private void startUpgrade(DeviceInfo device,UpgPackage upgPackage) {
-        if (!upgPackage.checkModelname(device.getModelname())) {
-            updateNotify("Modelname is not match");
-            return;
-        }
-        if (!upgPackage.checkBoardname(device.getBoardname())) {
-            updateNotify("not find newer version");
-            return;
-        }
-        if (upgPackage.compareVersion(device.getVersion()) <= 0) {
-            Log.d(TAG, "not find newer version");
-            notifyStr += "\n" + "not find newer version";
-            upg_notify.setText(notifyStr);
-            return;
-        }
-
-        updateNotify("parsering local upgpackage");
-        upgPackage.parseScript();
-        List<PartitionInfo> upgList = upgPackage.getUpglists();
-        Log.d(TAG, "upgList.size():"+upgList.size());
-
-        setUpgPath(upgPackage.getUnzipDir());
-
-        //int ret;
-        mainDevice.setUpgpartCount(upgList.size());
-        //Log.d(TAG, "setUpgpartCount ret:"+ret);
-    }
 }

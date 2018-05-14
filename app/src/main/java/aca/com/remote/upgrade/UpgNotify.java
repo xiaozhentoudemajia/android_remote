@@ -5,10 +5,10 @@ package aca.com.remote.upgrade;
  */
 
 public interface UpgNotify {
-    public void notifyLocalversion(String version);
+    public void notifyCheckUpgResult(String result);
     public void notifyFirmwareversion(String version);
     public void notifySatus(String info);
-    public void notifySetCountStatus(int result);
-    public void notifySetUpgPartStatus(int index, int result);
-    public void notifyBurnStatus(int result);
+    public void notifyDownloadSatus(int percent);
+    public void notifyBurnStatus(int percent);
+    public void notifyBurnRootfs();
 }

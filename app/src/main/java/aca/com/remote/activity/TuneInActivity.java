@@ -54,6 +54,8 @@ public class TuneInActivity extends BaseActivity {
     public Session session;
     private Library library;
 
+    private TuneInElement cur_station;
+
     public final static int tryCnt = 40;
     protected ActionErrorListener mLibraryErrListener = new ActionErrorListener() {
         @Override
@@ -145,6 +147,7 @@ public class TuneInActivity extends BaseActivity {
                     ((RadioListFragment)listFragments.get(listFragments.size() - 1)).setOnItemClickListener(itemClickListener);
                     mTuneIn.radioTimeGetUrl(((TuneInElement) o).getUrl());
                 } else {
+                    cur_station = (TuneInElement) o;
                     mTuneIn.radioTimeTuneStation(((TuneInElement) o).getGuide_id(), false);
                 }
             }
@@ -223,7 +226,7 @@ public class TuneInActivity extends BaseActivity {
                             Toast.makeText(TuneInActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        session.setRadioTunesUrl(str, "TuneIn");
+                        session.setRadioTunesUrl(str, "TuneIn", cur_station.getImage());
                         break;
                     case TuneInRequest.eTUNEIN_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when

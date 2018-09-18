@@ -213,7 +213,7 @@ public class Session {
 		});
 	}
 
-	public void setRadioTunesUrl(String url, String type) {
+	public void setRadioTunesUrl(String url, String type, String artwork) {
 		Log.i("wwj", String.format("setRadioTunesUrl :%s", url));
 		if (null == url || url.isEmpty() || null == type || type.isEmpty()) {
 			return;
@@ -225,8 +225,15 @@ public class Session {
 			data = url.substring(url.indexOf("?"));
 			url = url.substring(0, url.indexOf("?"));
 		}
-		this.fireAction(String.format("%s/ctrl-int/1/seturl?url=%s&type=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
-				this.getRequestBase(), url, type, this.sessionId), data, false);
+		String request_url;
+		if(null == artwork || artwork.isEmpty()){
+            request_url = String.format("%s/ctrl-int/1/seturl?url=%s&type=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
+                    this.getRequestBase(), url, type, this.sessionId);
+        } else {
+            request_url = String.format("%s/ctrl-int/1/seturl?url=%s&type=%s&artwork=%s&com.apple.itunes.extended-media-kind=1"+ "&session-id=%s",
+                    this.getRequestBase(), url, type, artwork, this.sessionId);
+        }
+		this.fireAction(request_url, data, false);
 	}
 
 	public static void controlPauseWithoutLogin(String host) {

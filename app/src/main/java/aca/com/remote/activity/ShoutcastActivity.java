@@ -64,6 +64,8 @@ public class ShoutcastActivity extends BaseActivity {
     public Session session;
     private Library library;
 
+    private ShoutCastRadioStation cur_station;
+
     public final static int tryCnt = 40;
     protected ActionErrorListener mLibraryErrListener = new ActionErrorListener() {
         @Override
@@ -158,8 +160,10 @@ public class ShoutcastActivity extends BaseActivity {
                 }
             } else if (o instanceof ShoutCastRadioStation) {
                 /** station tune**/
-                if (null != tune_base)
+                if (null != tune_base) {
+                    cur_station = (ShoutCastRadioStation) o;
                     mShoutCast.tuneIntoStation(tune_base, ((ShoutCastRadioStation) o).getId());
+                }
             }
         }
     };
@@ -227,7 +231,7 @@ public class ShoutcastActivity extends BaseActivity {
                             Toast.makeText(ShoutcastActivity.this, R.string.error_no_speaker_selected, Toast.LENGTH_SHORT).show();
                             break;
                         }
-                        session.setRadioTunesUrl(str, "SHOUTcast");
+                        session.setRadioTunesUrl(str, "SHOUTcast", cur_station.getLogo());
                         break;
                     case ShoutCastRequest.eSHOUTCAST_MSG_XML_PARSER_START:
                         /** no need to set status to false, because status will be set to false when

@@ -129,7 +129,7 @@ public class RadioListItemAdapter extends BaseAdapter {
                 //no contain, set to default, and start to download
                 ((ImageView)convertView.findViewById(R.id.radio_list_item_image)).setImageResource(R.drawable.radio_station);
                 iconMap.put(((ShoutCastRadioStation) o).getLogo(), null);//set to null, means downloading
-//                getHttpBitmap(((ShoutCastRadioStation) o).getLogo());
+                getHttpBitmap(((ShoutCastRadioStation) o).getLogo());
             } else {
                 String url = ((ShoutCastRadioStation) o).getLogo();
                 if (null != iconMap.get(url))
